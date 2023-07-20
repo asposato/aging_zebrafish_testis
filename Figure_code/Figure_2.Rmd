@@ -1,0 +1,129 @@
+---
+title: "infertile atlas data processing and integration"
+author: "Andy Sposato" 
+output: pdf_document
+---
+
+```{r load required packages, message=FALSE, warning=FALSE}
+library(Seurat)
+library(stats)
+library(viridis)
+library(ggplot2)
+```
+
+### You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
+
+```{r create 27 mo. sub objects}
+mo27_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/19226R_out/X3/outs/filtered_gene_bc_matrices/')
+mo27_A <- CreateSeuratObject(counts = mo27_A.data, project = 'mo27_A', min.cells = 3)
+mo27_A[['percent.mt']] <- PercentageFeatureSet(mo27_A, pattern = "mt-")
+mo27_A$sub.sample <- "mo27_A"
+mo27_A$age <- "27 mo."
+mo27_A <- subset(mo27_A, subset = nFeature_RNA > 200 & nFeature_RNA < 2945)
+mo27_A <- subset(mo27_A, subset = percent.mt < 5)
+mo27_A <- NormalizeData(mo27_A)
+mo27_A <- FindVariableFeatures(mo27_A)
+
+mo27_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/19226R_out/X3/outs/filtered_gene_bc_matrices/')
+mo27_B <- CreateSeuratObject(counts = mo27_B.data, project = 'mo27_B', min.cells = 3)
+mo27_B[['percent.mt']] <- PercentageFeatureSet(mo27_B, pattern = "mt-")
+mo27_B$sub.sample <- "mo27_B"
+mo27_B$age <- "27 mo."
+mo27_B <- subset(mo27_B, subset = nFeature_RNA > 200 & nFeature_RNA < 2502)
+mo27_B <- subset(mo27_B, subset = percent.mt < 5)
+mo27_B <- NormalizeData(mo27_B)
+mo27_B <- FindVariableFeatures(mo27_B)
+```
+
+```{r integrate 27 mo. data}
+# combine data
+testis.anchors <- FindIntegrationAnchors(object.list = list(mo27_A, mo27_B), dims = 1:20)
+testis.combined <- IntegrateData(anchorset = testis.anchors, dims = 1:20)
+DefaultAssay(testis.combined) <- "integrated"
+testis.combined <- ScaleData(testis.combined)
+testis.combined <- RunPCA(testis.combined, features = VariableFeatures(object = testis.combined))
+testis.combined <- FindNeighbors(testis.combined, reduction = 'pca', dims = 1:20)
+testis.combined <- FindClusters(testis.combined, resolution = 0.5)
+testis.combined <- RunUMAP(testis.combined, reduction = 'pca', dims = 1:20)
+```
+
+### Cell types were assigned using marker genes and stored as a metadata column in the object. 
+### The following code will reproduce the panels in Figures 2 and Supplemental 2.
+### Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
+
+```{r infertile atlas with cell type metadata included}
+infertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/infertile_atlas.rds")
+```
+
+```{r Figure 2 panel C}
+DimPlot(infertile, group.by = 'cell.type', label = T, pt.size = 1.5, repel = T) + NoLegend() + NoAxes()
+```
+
+```{r Figure 2 panel D, message=FALSE, warning=FALSE}
+DefaultAssay(infertile) <- "RNA"
+FeaturePlot(infertile, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(infertile, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(infertile, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
+
+```
+
+```{r Figure 2 panel E, message=FALSE, warning=FALSE}
+DefaultAssay(infertile) <- "RNA"
+FeaturePlot(infertile, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(infertile, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(infertile, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(infertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+### Note: the expression of any gene detected in the infertile testis can be explored easily using the shiny app. See github page. 
+
+```{r Supplemental Figure 2 panel A, message=FALSE, warning=FALSE}
+VlnPlot(infertile, "percent.mt", group.by = 'cell.type', pt.size = 0) + 
+  ggtitle("% mitochondrial genes/cell") + NoLegend()
+VlnPlot(infertile, "nFeature_RNA", group.by = 'cell.type', pt.size = 0, y.max = 3000) + 
+  ggtitle("number of genes/cell") + NoLegend()
+VlnPlot(infertile, "nCount_RNA", group.by = 'cell.type', pt.size = 0, y.max = 30000) + 
+  ggtitle("number of transcripts/cell") + NoLegend()
+
+meta <- infertile@meta.data
+meta[meta$cell.type == 'spermatogonia 1', "cell.cat"] <- "germ cells"
+meta[meta$cell.type == 'spermatogonia 2', "cell.cat"] <- "germ cells"
+meta[meta$cell.type == 'spermatocytes', "cell.cat"] <- "germ cells"
+meta[meta$cell.type == 'Sertoli & Leydig', "cell.cat"] <- "Sertoli & Leydig"
+meta[meta$cell.type == 'vSMC', "cell.cat"] <- "vSMC"
+meta[meta$cell.type == 'blood', "cell.cat"] <- "blood"
+meta[meta$cell.type == 'macrophages 1', "cell.cat"] <- "macrophages"
+meta[meta$cell.type == 'macrophages 2', "cell.cat"] <- "macrophages"
+meta[meta$cell.type == 'macrophages 3', "cell.cat"] <- "macrophages"
+meta[meta$cell.type == 'T cells 1', "cell.cat"] <- "T cells"
+meta[meta$cell.type == 'T cells 2', "cell.cat"] <- "T cells"
+meta[meta$cell.type == 'T cells 3', "cell.cat"] <- "T cells"
+meta[meta$cell.type == 'T cells 4', "cell.cat"] <- "T cells"
+meta[meta$cell.type == 'T cells 5', "cell.cat"] <- "T cells"
+meta[meta$cell.type == 'Treg', "cell.cat"] <- "T cells"
+meta[meta$cell.type == 'NK cells', "cell.cat"] <- "NK"
+meta[meta$cell.type == 'B cells', "cell.cat"] <- "NK"
+meta[meta$cell.type == 'neutrophils', "cell.cat"] <- "neutrophils"
+meta[meta$cell.type == 'leukocytes', "cell.cat"] <- "leukocytes"
+meta[meta$cell.type == 'unknown immune', "cell.cat"] <- "unknown immune"
+cell.cats <- as.vector(meta$cell.cat)
+infertile <- AddMetaData(infertile, cell.cats, 'cell.cat')
+
+my_levels <- c("germ cells", "Sertoli & Leydig", "vSMC", "blood", "macrophages", "T cells", 
+               "NK", "neutrophils", "leukocytes", "unknown immune")
+infertile@meta.data$cell.cat <- factor(x = infertile@meta.data$cell.cat, levels = my_levels)
+
+rm(meta, cell.cats)
+
+VlnPlot(infertile, "percent.mt", group.by = 'cell.cat', pt.size = 0) + 
+  ggtitle("% mitochondrial genes/cell") + NoLegend()
+VlnPlot(infertile, "nFeature_RNA", group.by = 'cell.cat', pt.size = 0, y.max = 3000) + 
+  ggtitle("number of genes/cell") + NoLegend()
+VlnPlot(infertile, "nCount_RNA", group.by = 'cell.cat', pt.size = 0, y.max = 30000) + 
+  ggtitle("number of transcripts/cell") + NoLegend()
+
+```
+
+```{r Supplemental Figure 2 panel B, message=FALSE, warning=FALSE}
+genes <- c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1")
+VlnPlot(infertile, genes, group.by = 'cell.cat', stack = T, flip = T) + NoLegend()
+```
