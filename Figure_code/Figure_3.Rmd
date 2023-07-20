@@ -98,15 +98,6 @@ DimPlot(immune, cells.highlight = fertile_immune_cells,
         cols.highlight = c('darkmagenta'), pt.size = 1.5) + NoLegend() + NoAxes()
 ```
 
-
-
-
-```{r Supplemental Figure 3 Panel A}
-DimPlot(immune, split.by = 'age', cols = c("#B0E0E6", "#4169E1", "#FF69B4", "#FFC0CB","#2E8B57", "#87CEFA",
-                 "#40E0D0", "#8B0000","#DC143C", "#800080", "#98FB98","#C8A2C8",
-                 "#1E90FF", "#CD5C5C", "#00008B")) + NoLegend() + NoAxes()
-```
-
 # To generate the bar graph for panel D, the CellSelector function from Seurat was used to isolate somatic cell types from the fertile atlas. 
 
 ```{r selecting Leydig cells from fertile atlas}
@@ -213,4 +204,70 @@ ggplot(soma_df, aes(fill=age, x=factor(cell.cats, level=c("SLV", "macrophages", 
   geom_bar(position = 'dodge', stat = 'identity', color = 'black') + theme_classic() + 
   ylab("normalized percent") + xlab("cell type") + theme(plot.title = element_text(hjust = 0.5)) + theme(axis.text.x = element_text(angle = 0, vjust = 0, hjust=.5)) + scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87')) + ggtitle("relative abundance of somatic cell types across fertility")
 ```
+```{r Supplemental Figure 3 Panel A}
+DimPlot(immune, split.by = 'age', cols = c("#B0E0E6", "#4169E1", "#FF69B4", "#FFC0CB","#2E8B57", "#87CEFA",
+                 "#40E0D0", "#8B0000","#DC143C", "#800080", "#98FB98","#C8A2C8",
+                 "#1E90FF", "#CD5C5C", "#00008B")) + NoLegend() + NoAxes()
+```
+
+
+```{r Supplemental Figure 3 Panel B}
+my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4",
+               "T cells 5", "Treg", "macrophages 1",
+               "macrophages 2", "macrophages 3", "macrophages 4",
+               "leukocytes", "B cells", "neutrophils", "NK", "unknown immune")
+immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
+marker_list <- c("coro1a", "ptprc","lck", "gata3", "runx3", "zap70", 
+                  "foxp3a", "cd4-1", 
+                  "nkl.2", "pax5", 
+                  "mpeg1.1", "csf1ra", "lgmn",
+                  "mpx", "lyz",
+                  "defbl1", "apodb")
+VlnPlot(immune, marker_list, group.by = 'cell.type', stack = T, flip = T) + NoLegend()
+```
+```{r Supplemental Figure 3 Panel C-F, message=FALSE, warning=FALSE}
+DefaultAssay(fertile) <- "RNA"
+FeaturePlot(fertile, "anxa5b", pt.size = 1, order = F) + NoAxes() + ggtitle("anxa5b") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(infertile, "anxa5b", pt.size = 1, order = F) + NoAxes() + ggtitle("anxa5b") + scale_colour_viridis(option = "rocket", direction = -1)
+VlnPlot(infertile, "anxa5b", pt.size = 0, group.by = 'cell.type') + ggtitle("anxa5b") + NoLegend()
+VlnPlot(infertile, "anxa5b", pt.size = 0, group.by = 'cell.type') + ggtitle("anxa5b") + NoLegend()
+```
+```{r Supplemental Figure 3 G, message=FALSE, warning=FALSE}
+immune <- ScaleData(immune, assay = 'RNA')
+Tcells1 <- c("ccl34b.4", "ccl38a.4", "crema", "tnfrsf9a", "traf1")
+Tcells2 <- c("sat1a.1", "ccl36.1", "ca2", "il2rb", "fosab")
+macrophages1 <- c("lgals2a", "lygl1", "cd74a", "c1qc", "c1qb")
+macrophages2 <- c("ccl35.1", "hspb1", "marcksl1b", "timp2b", "fthl27")
+NK <- c("nkl.2", "il1fma", "ccl36.1", "ccl38.6", "slc41a1")
+Treg <- c("foxp3a", "il1rl1", "cd4-1", "cd28l", "cd28")
+Tcells3 <- c("zp2.5", "setbp1", "crp2", "org", "hbba1")
+macrophages3 <- c("h1m", "zp3", "cldng", "tmsb5", "ccnb1")
+macrophages4 <- c("grn2", "lgmn", "grn1", "ctsd", "gpnmb")
+neutrophils <- c("lgals2b", "krt91", "krt92", "krt4", "cldnh")
+Bcells <- c("igic1s1", "sftpba", "p2rx3a", "ctsbb", "ccl35.1")
+leukocytes <- c("spink2.2", "c3a.4", "itln1", "cfh", "c3a.5")
+Tcells4 <- c("zgc:110216", "hist1h2a6", "zgc:113984.1", "hist2h3c", "hist1h4l")
+unknown <- c("apodb", "defbl1", "lypc", "apoda.1", "alx4a")
+Tcells5 <- c("il4", "il13", "il11b", "csf3a", "gata3")
+
+features_list <- c(Tcells1, Tcells2, Tcells3, Tcells4, Tcells5, Treg, NK,
+                   Bcells, macrophages1, macrophages2, macrophages3, macrophages4, 
+                   neutrophils, leukocytes, unknown)
+
+#my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", 
+               #"Treg", "NK", "B cells", "macrophages 1", "macrophages 2", 
+               #"macrophages 3", "macrophages 4", "neutrophils", "leukocytes", "unknown immune")
+#immune@meta.data$cell_type <- factor(immune@meta.data$cell_type, levels = my_levels)
+
+my_levels <- c(0, 1, 6, 12, 14, 5, 4, 10, 2, 3, 7, 8, 9, 11, 13)
+immune@meta.data$seurat_clusters <- factor(immune@meta.data$seurat_clusters, levels = my_levels)
+#immune <- ScaleData(immune, assay = "RNA")
+
+DoHeatmap(immune, assay = 'RNA', slot = "scale.data", features = features_list, raster = F, lines.width = 20, label = F, size = 2, angle = 90, group.by = "seurat_clusters", group.colors = c("#B0E0E6", "#4169E1", "#40E0D0", 
+                                                            "#1E90FF", "#00008B","#87CEFA", 
+                                                            "#FF69B4", "#FFC0CB", "#8B0000", 
+                                                            "#DC143C", "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#CD5C5C"),draw.lines = T) + theme(axis.text.y = element_text(size = 7)) + scale_fill_viridis_c(option="rocket", direction = 1)
+```
+
 
