@@ -11,7 +11,7 @@ library(viridis)
 library(ggplot2)
 ```
 
-# You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
+### You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
 
 ```{r create 5 mo. sub objects}
 # samples were sequenced across multiple channels with 10X, 6 total channels were used to sequence the 5 month testis samples from 2 individuals
@@ -253,9 +253,9 @@ all_fertile <- FindNeighbors(all_fertile, reduction = 'pca', dims = 1:15)
 all_fertile <- FindClusters(all_fertile, resolution = 0.5)
 ```
 
-# Cell types were assigned using marker genes and stored as a metadata column in the object. 
-# The following code will reproduce the panels in Figures 1 and Supplemental 1.
-# Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
+### Cell types were assigned using marker genes and stored as a metadata column in the object. 
+### The following code will reproduce the panels in Figures 1 and Supplemental 1.
+### Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
 
 ```{r fertile atlas with cell type metadata included}
 fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
@@ -284,7 +284,7 @@ FeaturePlot(fertile, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star"
 FeaturePlot(fertile, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
 FeaturePlot(fertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
 ```
-# Note: the expression of any gene detected in the fertile testis can be explored easily using the shiny app. See github page. 
+### Note: the expression of any gene detected in the fertile testis can be explored easily using the shiny app. See github page. 
 
 ```{r Supplemental Figure 1 panel B}
 DimPlot(mo5, label = F, group.by = 'seurat_clusters') + NoAxes()
