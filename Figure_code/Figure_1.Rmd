@@ -1,0 +1,360 @@
+---
+title: "fertile atlas data processing and integration"
+author: "Andy Sposato" 
+output: pdf_document
+---
+
+```{r load required packages, message=FALSE, warning=FALSE}
+library(Seurat)
+library(stats)
+library(viridis)
+library(ggplot2)
+```
+
+# You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
+
+```{r create 5 mo. sub objects}
+# samples were sequenced across multiple channels with 10X, 6 total channels were used to sequence the 5 month testis samples from 2 individuals
+# import gene expression matrices produced by cellranger
+mo5_A1.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/5mo_testis/X1/filtered_feature_bc_matrix/')
+# create object
+mo5_A1 <- CreateSeuratObject(counts = mo5_A1.data, project = '5mo_testis', min.cells = 3)
+# identify mitochondrial RNAs
+mo5_A1[['percent.mt']] <- PercentageFeatureSet(mo5_A1, pattern = "mt-")
+# assign sub sample ID
+mo5_A1$sub.sample <- "5mo_A"
+# assign age 
+mo5_A1$age <- "5 mo."
+
+# determine max acceptable number of genes per cell
+quantile(mo5_A1@meta.data$nFeature_RNA, prob=c(.75)) # 3rd quartile = 2310
+# subset for acceptable range of genes per cell
+mo5_A1 <- subset(mo5_A1, subset = nFeature_RNA > 200 & nFeature_RNA < 2311)
+
+# subset for cells with acceptable percent of mitochondrial RNAs
+mo5_A1 <- subset(mo5_A1, subset = percent.mt < 5)
+
+# pre-processing steps before integration and dimensional reduction
+mo5_A1 <- NormalizeData(mo5_A1)
+mo5_A1 <- FindVariableFeatures(mo5_A1)
+mo5_A1 <- ScaleData(mo5_A1)
+mo5_A1 <- RunPCA(mo5_A1)
+
+# repeat with 5 mo. A2, A3, B1, B2, B3 data
+
+mo5_A2.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/5mo_testis/X2/filtered_feature_bc_matrix/')
+mo5_A2 <- CreateSeuratObject(counts = mo5_A2.data, project = '5mo_testis', min.cells = 3)
+mo5_A2[['percent.mt']] <- PercentageFeatureSet(mo5_A2, pattern = "mt-")
+mo5_A2$sub.sample <- "5mo_A" 
+mo5_A2$age <- "5 mo."
+mo5_A2 <- subset(mo5_A2, subset = nFeature_RNA > 200 & nFeature_RNA < 2686)
+mo5_A2 <- subset(mo5_A2, subset = percent.mt < 5)
+mo5_A2 <- NormalizeData(mo5_A2)
+mo5_A2 <- FindVariableFeatures(mo5_A2)
+mo5_A2 <- ScaleData(mo5_A2)
+mo5_A2 <- RunPCA(mo5_A2)
+
+mo5_A3.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/5mo_testis/X3/filtered_feature_bc_matrix/')
+mo5_A3 <- CreateSeuratObject(counts = mo5_A3.data, project = '5mo_testis', min.cells = 3)
+mo5_A3[['percent.mt']] <- PercentageFeatureSet(mo5_A3, pattern = "mt-")
+mo5_A3$sub.sample <- "5mo_A"
+mo5_A3$age <- "5 mo."
+mo5_A3 <- subset(mo5_A3, subset = nFeature_RNA > 200 & nFeature_RNA < 2508)
+mo5_A3 <- subset(mo5_A3, subset = percent.mt < 5)
+mo5_A3 <- NormalizeData(mo5_A3)
+mo5_A3 <- FindVariableFeatures(mo5_A3)
+mo5_A3 <- ScaleData(mo5_A3)
+mo5_A3 <- RunPCA(mo5_A3)
+
+mo5_B1.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/5mo_testis/X4/filtered_feature_bc_matrix/')
+mo5_B1 <- CreateSeuratObject(counts = mo5_B1.data, project = '5mo_testis', min.cells = 3)
+mo5_B1[['percent.mt']] <- PercentageFeatureSet(mo5_B1, pattern = "mt-")
+mo5_B1$sub.sample <- "5mo_B" 
+mo5_B1$age <- "5 mo."
+mo5_B1 <- subset(mo5_B1, subset = nFeature_RNA > 200 & nFeature_RNA < 3216)
+mo5_B1 <- subset(mo5_B1, subset = percent.mt < 5)
+mo5_B1 <- NormalizeData(mo5_B1)
+mo5_B1 <- FindVariableFeatures(mo5_B1)
+mo5_B1 <- ScaleData(mo5_B1)
+mo5_B1 <- RunPCA(mo5_B1)
+
+mo5_B2.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/5mo_testis/X5/filtered_feature_bc_matrix/')
+mo5_B2 <- CreateSeuratObject(counts = mo5_B2.data, project = '5mo_testis', min.cells = 3)
+mo5_B2[['percent.mt']] <- PercentageFeatureSet(mo5_B2, pattern = "mt-")
+mo5_B2$sub.sample <- "5mo_B" 
+mo5_B2$age <- "5 mo."
+mo5_B2 <- subset(mo5_B2, subset = nFeature_RNA > 200 & nFeature_RNA < 3156)
+mo5_B2 <- subset(mo5_B2, subset = percent.mt < 5)
+mo5_B2 <- NormalizeData(mo5_B2)
+mo5_B2 <- FindVariableFeatures(mo5_B2)
+mo5_B2 <- ScaleData(mo5_B2)
+mo5_B2 <- RunPCA(mo5_B2)
+
+mo5_B3.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/5mo_testis/X6/filtered_feature_bc_matrix/')
+mo5_B3 <- CreateSeuratObject(counts = mo5_B3.data, project = '5mo_testis', min.cells = 3)
+mo5_B3[['percent.mt']] <- PercentageFeatureSet(mo5_B3, pattern = "mt-")
+mo5_B3$sub.sample <- "5mo_B" 
+mo5_B3$age <- "5 mo."
+mo5_B3 <- subset(mo5_B3, subset = nFeature_RNA > 200 & nFeature_RNA < 3022)
+mo5_B3 <- subset(mo5_B3, subset = percent.mt < 5)
+mo5_B3 <- NormalizeData(mo5_B3)
+mo5_B3 <- FindVariableFeatures(mo5_B3)
+mo5_B3 <- ScaleData(mo5_B3)
+mo5_B3 <- RunPCA(mo5_B3)
+```
+
+```{r integrate 5 mo. objects}
+# integrate 5 mo. sub objects
+mo5.anchors <- FindIntegrationAnchors(object.list = list(mo5_A1, mo5_A2, mo5_A3, mo5_B1, mo5_B2, mo5_B3), reduction = "cca", dims = 1:15)
+mo5 <- IntegrateData(anchorset = mo5.anchors, dims = 1:15)
+
+# used combined data as default data
+DefaultAssay(mo5) <- "integrated"
+
+# scale data and run PCA
+mo5 <- ScaleData(mo5, assay = "integrated")
+mo5 <- ScaleData(mo5, assay = "RNA")
+mo5 <- RunPCA(mo5, features = VariableFeatures(object = mo5))
+
+# RunUMAP, clustering
+mo5 <- RunUMAP(mo5, reduction = 'pca', dims = 1:15)
+mo5 <- FindNeighbors(mo5, reduction = 'pca', dims = 1:15)
+mo5 <- FindClusters(mo5, resolution = 0.5)
+
+# get rid objects/matrices no longer needed
+rm(mo5_A1, mo5_A2, mo5_A3, mo5_B1, mo5_B2, mo5_B3, mo5_A1.data, mo5_A2.data, mo5_A3.data, mo5_B1.data, mo5_B2.data, mo5_B3.data, mo5.anchors)
+```
+
+```{r repeat for 12 mo.}
+yr1_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/15756X3/filtered_feature_bc_matrix/')
+yr1_A <- CreateSeuratObject(counts = yr1_A.data, project = 'yr1_A', min.cells = 3)
+yr1_A[['percent.mt']] <- PercentageFeatureSet(yr1_A, pattern = "mt-")
+yr1_A$sub.sample <- "12mo_A"
+yr1_A$age <- "12 mo."
+yr1_A <- subset(yr1_A, subset = nFeature_RNA > 200 & nFeature_RNA < 3560)
+yr1_A <- subset(yr1_A, subset = percent.mt < 5)
+yr1_A <- NormalizeData(yr1_A)
+yr1_A <- FindVariableFeatures(yr1_A)
+yr1_A <- ScaleData(yr1_A)
+yr1_A <- RunPCA(yr1_A)
+
+yr1_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/15756X4/filtered_feature_bc_matrix/')
+yr1_B <- CreateSeuratObject(counts = yr1_B.data, project = 'yr1_B', min.cells = 3)
+yr1_B[['percent.mt']] <- PercentageFeatureSet(yr1_B, pattern = "mt-")
+yr1_B$sub.sample <- "12mo_B" 
+yr1_B$age <- "12 mo."
+yr1_B <- subset(yr1_B, subset = nFeature_RNA > 200 & nFeature_RNA < 3373)
+yr1_B <- subset(yr1_B, subset = percent.mt < 5)
+yr1_B <- NormalizeData(yr1_B)
+yr1_B <- FindVariableFeatures(yr1_B)
+yr1_B <- ScaleData(yr1_B)
+yr1_B <- RunPCA(yr1_B)
+
+yr1.anchors <- FindIntegrationAnchors(object.list = list(yr1_A, yr1_B), reduction = "cca", dims = 1:10)
+yr1 <- IntegrateData(anchorset = yr1.anchors, dims = 1:10)
+DefaultAssay(yr1) <- "integrated"
+yr1 <- ScaleData(yr1, assay = "integrated")
+yr1 <- ScaleData(yr1, assay = "RNA")
+yr1 <- RunPCA(yr1, features = VariableFeatures(object = yr1))
+yr1 <- RunUMAP(yr1, reduction = 'pca', dims = 1:10)
+yr1 <- FindNeighbors(yr1, reduction = 'pca', dims = 1:10)
+yr1 <- FindClusters(yr1, resolution = 0.5)
+
+rm(yr1_A, yr1_B, yr1_A.data, yr1_B.data, yr1.anchors)
+```
+
+```{r repeat for 20 mo.}
+yr1.6_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/18827X2/filtered_feature_bc_matrix/')
+yr1.6_A <- CreateSeuratObject(counts = yr1.6_A.data, project = 'yr1.6_A', min.cells = 3)
+yr1.6_A[['percent.mt']] <- PercentageFeatureSet(yr1.6_A, pattern = "mt-")
+yr1.6_A$sub.sample <- "20mo_A"
+yr1.6_A$age <- "20 mo."
+yr1.6_A <- subset(yr1.6_A, subset = nFeature_RNA > 200 & nFeature_RNA < 4999)
+yr1.6_A <- subset(yr1.6_A, subset = percent.mt < 5)
+yr1.6_A<- NormalizeData(yr1.6_A)
+yr1.6_A <- FindVariableFeatures(yr1.6_A)
+yr1.6_A <- ScaleData(yr1.6_A)
+yr1.6_A <- RunPCA(yr1.6_A)
+
+yr1.6_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/18827X4/filtered_feature_bc_matrix/')
+yr1.6_B <- CreateSeuratObject(counts = yr1.6_B.data, project = 'yr1.6_B', min.cells = 3)
+yr1.6 <- subset(yr1.6, subset = nFeature_RNA > 200 & nFeature_RNA < 6373)
+yr1.6_B[['percent.mt']] <- PercentageFeatureSet(yr1.6_B, pattern = "mt-")
+yr1.6_B$sub.sample <- "20mo_B"
+yr1.6_B$age <- "20 mo."
+yr1.6_B <- subset(yr1.6_B, subset = percent.mt < 5)
+yr1.6_B <- NormalizeData(yr1.6_B)
+yr1.6_B <- FindVariableFeatures(yr1.6_B)
+yr1.6_B <- ScaleData(yr1.6_B)
+yr1.6_B <- RunPCA(yr1.6_B)
+
+yr1.6.anchors <- FindIntegrationAnchors(object.list = list(yr1.6_A, yr1.6_B), reduction = "cca", dims = 1:10)
+yr1.6 <- IntegrateData(anchorset = yr1.6.anchors, dims = 1:10)
+DefaultAssay(yr1.6) <- "integrated"
+yr1.6 <- ScaleData(yr1.6, assay = "integrated")
+yr1.6 <- ScaleData(yr1.6, assay = "RNA")
+yr1.6 <- RunPCA(yr1.6, features = VariableFeatures(object = yr1.6))
+yr1.6 <- RunUMAP(yr1.6, reduction = 'pca', dims = 1:10)
+yr1.6 <- FindNeighbors(yr1.6, reduction = 'pca', dims = 1:10)
+yr1.6 <- FindClusters(yr1.6, resolution = 0.5)
+
+rm(yr1.6_A.data, yr1.6_B.data, yr1.6_A, yr1.6_B, yr1.6.anchors)
+```
+
+
+```{r repeat for 22 mo.}
+yr1.8_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/18827X1/filtered_feature_bc_matrix/')
+# create Seurat object
+yr1.8_A <- CreateSeuratObject(counts = yr1.8_A.data, project = 'yr1.8_A', min.cells = 3)
+yr1.8_A[['percent.mt']] <- PercentageFeatureSet(yr1.8_A, pattern = "mt-")
+yr1.8_A$sub.sample <- "22mo_A" # for comparison of data set X3 vs X4
+yr1.8_A$age <- "22 mo."
+yr1.8_A <- subset(yr1.8_A, subset = nFeature_RNA > 200 & nFeature_RNA < 6962)
+yr1.8_A <- subset(yr1.8_A, subset = percent.mt < 5)
+yr1.8_A <- NormalizeData(yr1.8_A)
+yr1.8_A <- FindVariableFeatures(yr1.8_A)
+yr1.8_A <- ScaleData(yr1.8_A)
+yr1.8_A <- RunPCA(yr1.8_A)
+
+yr1.8_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/18827X3/filtered_feature_bc_matrix/')
+yr1.8_B <- CreateSeuratObject(counts = unedited2.data, project = 'yr1.8_B', min.cells = 3)
+yr1.8_B[['percent.mt']] <- PercentageFeatureSet(yr1.8_B, pattern = "mt-")
+yr1.8_B$sub.sample <- "22mo_B"
+yr1.8_B$age <- "22 mo."
+yr1.8_B <- subset(yr1.8_B, subset = nFeature_RNA > 200 & nFeature_RNA < 7058)
+yr1.8_B <- subset(yr1.8_B, subset = percent.mt < 5)
+yr1.8_B <- NormalizeData(yr1.8_B)
+yr1.8_B <- FindVariableFeatures(yr1.8_B)
+yr1.8_B <- ScaleData(yr1.8_B)
+yr1.8_B <- RunPCA(yr1.8_B)
+
+yr1.8.anchors <- FindIntegrationAnchors(object.list = list(yr1.8_A, yr1.8_B), reduction = "cca", dims = 1:15)
+yr1.8 <- IntegrateData(anchorset = yr1.8.anchors, dims = 1:15)
+DefaultAssay(yr1.8) <- "integrated"
+yr1.8 <- ScaleData(yr1.8, assay = "integrated")
+yr1.8 <- ScaleData(yr1.8, assay = "RNA")
+yr1.8 <- RunPCA(yr1.8, features = VariableFeatures(object = yr1.8))
+yr1.8 <- RunUMAP(yr1.8, reduction = 'pca', dims = 1:15)
+yr1.8 <- FindNeighbors(yr1.8, reduction = 'pca', dims = 1:15)
+yr1.8 <- FindClusters(yr1.8, resolution = 0.5)
+
+rm(yr1.8_A.data, yr1.8_B.data, yr1.8_A, yr1.8_B, yr1.8.anchors)
+```
+
+```{r integrate all ages}
+testis.anchors <- FindIntegrationAnchors(object.list = list(mo5, yr1, yr1.6, yr1.8), reduction = "cca", dims = 1:15)
+all_fertile <- IntegrateData(anchorset = testis.anchors, dims = 1:15)
+DefaultAssay(all_fertile) <- "integrated"
+all_fertile <- ScaleData(all_fertile, assay = "integrated")
+all_fertile <- ScaleData(all_fertile, assay = "RNA")
+all_fertile <- RunPCA(all_fertile, features = VariableFeatures(object = all_fertile))
+all_fertile <- RunUMAP(all_fertile, reduction = 'pca', dims = 1:15)
+all_fertile <- FindNeighbors(all_fertile, reduction = 'pca', dims = 1:15)
+all_fertile <- FindClusters(all_fertile, resolution = 0.5)
+```
+
+# Cell types were assigned using marker genes and stored as a metadata column in the object. 
+# The following code will reproduce the panels in Figures 1 and Supplemental 1.
+# Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
+
+```{r fertile atlas with cell type metadata included}
+fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
+mo5 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/mo5.rds")
+mo12 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr1.rds")
+mo20 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr1.6.rds")
+mo22 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr1.8.rds")
+```
+
+```{r Figure 1 panel C}
+DimPlot(fertile, group.by = 'cell.type', label = T, pt.size = 1.5, repel = T) + NoLegend() + NoAxes()
+```
+
+```{r Figure 1 panel D, message=FALSE, warning=FALSE}
+DefaultAssay(fertile) <- "RNA"
+FeaturePlot(fertile, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(fertile, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(fertile, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(fertile, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle("tssk6") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+
+```{r Figure 1 panel E, message=FALSE, warning=FALSE}
+DefaultAssay(fertile) <- "RNA"
+FeaturePlot(fertile, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(fertile, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(fertile, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(fertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+# Note: the expression of any gene detected in the fertile testis can be explored easily using the shiny app. See github page. 
+
+```{r Supplemental Figure 1 panel B}
+DimPlot(mo5, label = F, group.by = 'seurat_clusters') + NoAxes()
+DimPlot(mo12, label = F, group.by = 'seurat_clusters') + NoAxes()
+DimPlot(mo20, label = F, group.by = 'seurat_clusters') + NoAxes()
+DimPlot(mo22, label = F, group.by = 'seurat_clusters') + NoAxes()
+```
+
+```{r cell type markers in 5 mo. testis, message=FALSE, warning=FALSE}
+DefaultAssay(mo5) <- "RNA"
+FeaturePlot(mo5, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle("tssk6") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo5, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+
+```{r cell type markers in 12 mo. testis, message=FALSE, warning=FALSE}
+DefaultAssay(mo12) <- "RNA"
+FeaturePlot(mo12, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle("tssk6") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo12, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+
+```{r cell type markers in 20 mo. testis, message=FALSE, warning=FALSE}
+DefaultAssay(mo20) <- "RNA"
+FeaturePlot(mo20, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle("tssk6") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo20, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+
+```{r cell type markers in 22 mo. testis, message=FALSE, warning=FALSE}
+DefaultAssay(mo22) <- "RNA"
+FeaturePlot(mo22, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle("tssk6") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo22, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+```{r Supplemental Figure 1 panel C, message=FALSE, warning=FALSE}
+VlnPlot(fertile, "percent.mt", group.by = 'age', pt.size = 0, 
+        cols = c('red', 'purple', 'forestgreen', 'dodgerblue')) + 
+  ggtitle("% mitochondrial genes/cell") + NoLegend()
+VlnPlot(fertile, "nFeature_RNA", group.by = 'age', pt.size = 0, 
+        cols = c('red', 'purple', 'forestgreen', 'dodgerblue'), y.max = 6000) + 
+  ggtitle("number of genes/cell") + NoLegend()
+VlnPlot(fertile, "nCount_RNA", group.by = 'age', pt.size = 0, 
+        cols = c('red', 'purple', 'forestgreen', 'dodgerblue'), y.max = 60000) + 
+  ggtitle("number of transcripts/cell") + NoLegend()
+```
+```{r Supplemental Figure 1 panel D, message=FALSE, warning=FALSE}
+genes <- c("ddx4", "sycp3", "ccnb3", "tssk6", "gsdf", "star", "tagln", "hbba1")
+VlnPlot(fertile, genes, group.by = 'cell.type', stack = T, flip = T) + NoLegend()
+```
+```{r Supplemental Figure 1 panel E, message=FALSE, warning=FALSE}
+DimPlot(fertile, group.by = 'cell.type', label = F, split.by = 'age', pt.size = 1.5) + NoAxes() + NoLegend() + ggtitle(" ")
+```
