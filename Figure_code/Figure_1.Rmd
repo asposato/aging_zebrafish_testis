@@ -167,7 +167,7 @@ rm(yr1_A, yr1_B, yr1_A.data, yr1_B.data, yr1.anchors)
 yr1.6_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/18827X2/filtered_feature_bc_matrix/')
 yr1.6_A <- CreateSeuratObject(counts = yr1.6_A.data, project = 'yr1.6_A', min.cells = 3)
 yr1.6_A[['percent.mt']] <- PercentageFeatureSet(yr1.6_A, pattern = "mt-")
-yr1.6_A$sub.sample <- "20mo_A"
+yr1.6_A$sub.sample <- "20mo"
 yr1.6_A$age <- "20 mo."
 yr1.6_A <- subset(yr1.6_A, subset = nFeature_RNA > 200 & nFeature_RNA < 4999)
 yr1.6_A <- subset(yr1.6_A, subset = percent.mt < 5)
@@ -180,7 +180,7 @@ yr1.6_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/
 yr1.6_B <- CreateSeuratObject(counts = yr1.6_B.data, project = 'yr1.6_B', min.cells = 3)
 yr1.6 <- subset(yr1.6, subset = nFeature_RNA > 200 & nFeature_RNA < 6373)
 yr1.6_B[['percent.mt']] <- PercentageFeatureSet(yr1.6_B, pattern = "mt-")
-yr1.6_B$sub.sample <- "20mo_B"
+yr1.6_B$sub.sample <- "20mo"
 yr1.6_B$age <- "20 mo."
 yr1.6_B <- subset(yr1.6_B, subset = percent.mt < 5)
 yr1.6_B <- NormalizeData(yr1.6_B)
@@ -207,7 +207,7 @@ yr1.8_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/
 # create Seurat object
 yr1.8_A <- CreateSeuratObject(counts = yr1.8_A.data, project = 'yr1.8_A', min.cells = 3)
 yr1.8_A[['percent.mt']] <- PercentageFeatureSet(yr1.8_A, pattern = "mt-")
-yr1.8_A$sub.sample <- "22mo_A" # for comparison of data set X3 vs X4
+yr1.8_A$sub.sample <- "22mo" # for comparison of data set X3 vs X4
 yr1.8_A$age <- "22 mo."
 yr1.8_A <- subset(yr1.8_A, subset = nFeature_RNA > 200 & nFeature_RNA < 6962)
 yr1.8_A <- subset(yr1.8_A, subset = percent.mt < 5)
@@ -219,7 +219,7 @@ yr1.8_A <- RunPCA(yr1.8_A)
 yr1.8_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/Lawson_counts/18827X3/filtered_feature_bc_matrix/')
 yr1.8_B <- CreateSeuratObject(counts = unedited2.data, project = 'yr1.8_B', min.cells = 3)
 yr1.8_B[['percent.mt']] <- PercentageFeatureSet(yr1.8_B, pattern = "mt-")
-yr1.8_B$sub.sample <- "22mo_B"
+yr1.8_B$sub.sample <- "22mo"
 yr1.8_B$age <- "22 mo."
 yr1.8_B <- subset(yr1.8_B, subset = nFeature_RNA > 200 & nFeature_RNA < 7058)
 yr1.8_B <- subset(yr1.8_B, subset = percent.mt < 5)
@@ -284,7 +284,7 @@ FeaturePlot(fertile, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star"
 FeaturePlot(fertile, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
 FeaturePlot(fertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
 ```
-### Note: the expression of any gene detected in the fertile testis can be explored easily using the shiny app. See github page. 
+# Note: the expression of any gene detected in the fertile testis can be explored easily using the shiny app. See github page. 
 
 ```{r Supplemental Figure 1 panel B}
 DimPlot(mo5, label = F, group.by = 'seurat_clusters') + NoAxes()
