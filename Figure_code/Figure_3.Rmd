@@ -1,5 +1,5 @@
 ---
-title: "R Notebook"
+title: "immune cell atlas"
 output: pdf_document
 ---
 
@@ -160,7 +160,6 @@ table(infertile@meta.data$cell.type)
 2147 + 1508 + 1039  
 # 4694 macrophages
 ```
-
 
 ```{r build dataframe for bargraph from cell numbers}
 # the cell percent is determined by dividing the cell count by the total number of cells in the individual age's object
