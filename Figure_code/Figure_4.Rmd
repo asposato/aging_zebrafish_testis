@@ -917,3 +917,5 @@ features_for_dotplot <- c(fertile10, known, infertile10)
 DotPlot(SPG, features = features_for_dotplot, scale = T, group.by = 'age') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + theme(axis.text.x = element_text(angle =45,hjust = 1)) + theme(legend.title = element_text( size = 8)) & coord_flip()
 ```
 
+
+
