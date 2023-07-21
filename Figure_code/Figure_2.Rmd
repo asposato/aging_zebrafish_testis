@@ -127,3 +127,5 @@ VlnPlot(infertile, "nCount_RNA", group.by = 'cell.cat', pt.size = 0, y.max = 300
 genes <- c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1")
 VlnPlot(infertile, genes, group.by = 'cell.cat', stack = T, flip = T) + NoLegend()
 ```
+
+
