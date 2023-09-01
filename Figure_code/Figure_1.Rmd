@@ -286,7 +286,7 @@ FeaturePlot(fertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba
 ```
 # Note: the expression of any gene detected in the fertile testis can be explored easily using the shiny app. See github page. 
 
-```{r Supplemental Figure 1 panel B}
+```{r Supplemental Figure 1-2 panel B}
 DimPlot(mo5, label = F, group.by = 'seurat_clusters') + NoAxes()
 DimPlot(mo12, label = F, group.by = 'seurat_clusters') + NoAxes()
 DimPlot(mo20, label = F, group.by = 'seurat_clusters') + NoAxes()
@@ -340,7 +340,7 @@ FeaturePlot(mo22, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") +
 FeaturePlot(mo22, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
 FeaturePlot(mo22, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
 ```
-```{r Supplemental Figure 1 panel C, message=FALSE, warning=FALSE}
+```{r Supplemental Figure 1-2 panel C, message=FALSE, warning=FALSE}
 VlnPlot(fertile, "percent.mt", group.by = 'age', pt.size = 0, 
         cols = c('red', 'purple', 'forestgreen', 'dodgerblue')) + 
   ggtitle("% mitochondrial genes/cell") + NoLegend()
@@ -351,10 +351,10 @@ VlnPlot(fertile, "nCount_RNA", group.by = 'age', pt.size = 0,
         cols = c('red', 'purple', 'forestgreen', 'dodgerblue'), y.max = 60000) + 
   ggtitle("number of transcripts/cell") + NoLegend()
 ```
-```{r Supplemental Figure 1 panel D, message=FALSE, warning=FALSE}
+```{r Supplemental Figure 1-2 panel D, message=FALSE, warning=FALSE}
 genes <- c("ddx4", "sycp3", "ccnb3", "tssk6", "gsdf", "star", "tagln", "hbba1")
 VlnPlot(fertile, genes, group.by = 'cell.type', stack = T, flip = T) + NoLegend()
 ```
-```{r Supplemental Figure 1 panel E, message=FALSE, warning=FALSE}
+```{r Supplemental Figure 1-2 panel E, message=FALSE, warning=FALSE}
 DimPlot(fertile, group.by = 'cell.type', label = F, split.by = 'age', pt.size = 1.5) + NoAxes() + NoLegend() + ggtitle(" ")
 ```
