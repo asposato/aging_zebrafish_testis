@@ -11,7 +11,7 @@ library(viridis)
 library(ggplot2)
 ```
 
-### You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
+# You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
 
 ```{r create 27 mo. sub objects}
 mo27_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/19226R_out/X3/outs/filtered_gene_bc_matrices/')
@@ -47,9 +47,9 @@ testis.combined <- FindClusters(testis.combined, resolution = 0.5)
 testis.combined <- RunUMAP(testis.combined, reduction = 'pca', dims = 1:20)
 ```
 
-### Cell types were assigned using marker genes and stored as a metadata column in the object. 
-### The following code will reproduce the panels in Figures 2 and Supplemental 2.
-### Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
+# Cell types were assigned using marker genes and stored as a metadata column in the object. 
+# The following code will reproduce the panels in Figures 2 and Supplemental 2.
+# Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
 
 ```{r infertile atlas with cell type metadata included}
 infertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/infertile_atlas.rds")
@@ -74,58 +74,67 @@ FeaturePlot(infertile, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("sta
 FeaturePlot(infertile, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
 FeaturePlot(infertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
 ```
-### Note: the expression of any gene detected in the infertile testis can be explored easily using the shiny app. See github page. 
+# Note: the expression of any gene detected in the infertile testis can be explored easily using the shiny app. See github page. 
 
-```{r Supplemental Figure 2 panel A, message=FALSE, warning=FALSE}
-VlnPlot(infertile, "percent.mt", group.by = 'cell.type', pt.size = 0) + 
-  ggtitle("% mitochondrial genes/cell") + NoLegend()
-VlnPlot(infertile, "nFeature_RNA", group.by = 'cell.type', pt.size = 0, y.max = 3000) + 
-  ggtitle("number of genes/cell") + NoLegend()
-VlnPlot(infertile, "nCount_RNA", group.by = 'cell.type', pt.size = 0, y.max = 30000) + 
-  ggtitle("number of transcripts/cell") + NoLegend()
 
+```{r binned cell types into more general categories}
 meta <- infertile@meta.data
-meta[meta$cell.type == 'spermatogonia 1', "cell.cat"] <- "germ cells"
-meta[meta$cell.type == 'spermatogonia 2', "cell.cat"] <- "germ cells"
-meta[meta$cell.type == 'spermatocytes', "cell.cat"] <- "germ cells"
-meta[meta$cell.type == 'Sertoli & Leydig', "cell.cat"] <- "Sertoli & Leydig"
-meta[meta$cell.type == 'vSMC', "cell.cat"] <- "vSMC"
-meta[meta$cell.type == 'blood', "cell.cat"] <- "blood"
-meta[meta$cell.type == 'macrophages 1', "cell.cat"] <- "macrophages"
-meta[meta$cell.type == 'macrophages 2', "cell.cat"] <- "macrophages"
-meta[meta$cell.type == 'macrophages 3', "cell.cat"] <- "macrophages"
-meta[meta$cell.type == 'T cells 1', "cell.cat"] <- "T cells"
-meta[meta$cell.type == 'T cells 2', "cell.cat"] <- "T cells"
-meta[meta$cell.type == 'T cells 3', "cell.cat"] <- "T cells"
-meta[meta$cell.type == 'T cells 4', "cell.cat"] <- "T cells"
-meta[meta$cell.type == 'T cells 5', "cell.cat"] <- "T cells"
-meta[meta$cell.type == 'Treg', "cell.cat"] <- "T cells"
-meta[meta$cell.type == 'NK cells', "cell.cat"] <- "NK"
-meta[meta$cell.type == 'B cells', "cell.cat"] <- "NK"
-meta[meta$cell.type == 'neutrophils', "cell.cat"] <- "neutrophils"
-meta[meta$cell.type == 'leukocytes', "cell.cat"] <- "leukocytes"
-meta[meta$cell.type == 'unknown immune', "cell.cat"] <- "unknown immune"
+meta[meta$cell.type == "spermatogonia 1", "cell.cat"] <- "germ cells"
+meta[meta$cell.type == "spermatogonia 2", "cell.cat"] <- "germ cells"
+meta[meta$cell.type == "spermatocytes", "cell.cat"] <- "germ cells"
+meta[meta$cell.type == "Sertoli & Leydig", "cell.cat"] <- "Sertoli & Leydig"
+meta[meta$cell.type == "vSMC", "cell.cat"] <- "vSMC-like"
+meta[meta$cell.type == "blood", "cell.cat"] <- "blood"
+meta[meta$cell.type == "macrophages 1", "cell.cat"] <- "immune"
+meta[meta$cell.type == "macrophages 2", "cell.cat"] <- "immune"
+meta[meta$cell.type == "macrophages 3", "cell.cat"] <- "immune"
+meta[meta$cell.type == "T cells 1", "cell.cat"] <- "immune"
+meta[meta$cell.type == "T cells 2", "cell.cat"] <- "immune"
+meta[meta$cell.type == "T cells 3", "cell.cat"] <- "immune"
+meta[meta$cell.type == "T cells 4", "cell.cat"] <- "immune"
+meta[meta$cell.type == "T cells 5", "cell.cat"] <- "immune"
+meta[meta$cell.type == "Treg", "cell.cat"] <- "immune"
+meta[meta$cell.type == "B cells", "cell.cat"] <- "immune"
+meta[meta$cell.type == "NK cells", "cell.cat"] <- "immune"
+meta[meta$cell.type == "neutrophils", "cell.cat"] <- "immune"
+meta[meta$cell.type == "leukocytes", "cell.cat"] <- "immune"
+meta[meta$cell.type == "unknown immune", "cell.cat"] <- "immune"
 cell.cats <- as.vector(meta$cell.cat)
-infertile <- AddMetaData(infertile, cell.cats, 'cell.cat')
-
-my_levels <- c("germ cells", "Sertoli & Leydig", "vSMC", "blood", "macrophages", "T cells", 
-               "NK", "neutrophils", "leukocytes", "unknown immune")
-infertile@meta.data$cell.cat <- factor(x = infertile@meta.data$cell.cat, levels = my_levels)
-
-rm(meta, cell.cats)
-
-VlnPlot(infertile, "percent.mt", group.by = 'cell.cat', pt.size = 0) + 
-  ggtitle("% mitochondrial genes/cell") + NoLegend()
-VlnPlot(infertile, "nFeature_RNA", group.by = 'cell.cat', pt.size = 0, y.max = 3000) + 
-  ggtitle("number of genes/cell") + NoLegend()
-VlnPlot(infertile, "nCount_RNA", group.by = 'cell.cat', pt.size = 0, y.max = 30000) + 
-  ggtitle("number of transcripts/cell") + NoLegend()
-
+infertile <- AddMetaData(infertile, cell.cats, "cell.type.category")
 ```
 
-```{r Supplemental Figure 2 panel B, message=FALSE, warning=FALSE}
+```{r Supplemental Figure 2-2 panel A, message=FALSE, warning=FALSE}
+my_levels <- c("germ cells", "Sertoli & Leydig", "vSMC-like", "blood", "immune")
+infertile@meta.data$cell.type.category <- factor(x = infertile@meta.data$cell.type.category, levels = my_levels)
+
+VlnPlot(infertile, "percent.mt", group.by = 'cell.type.category', pt.size = 0) +
+  theme(axis.title = element_text(size = 0)) + 
+  theme(axis.title = element_text(size = 0)) + NoLegend() +
+  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
+  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
+  theme(title = element_text(size = 15)) + ggtitle("% mitochondrial reads/cell")
+
+VlnPlot(infertile, "nFeature_RNA", group.by = 'cell.type.category', pt.size = 0) +
+  theme(axis.title = element_text(size = 0)) + 
+  theme(axis.title = element_text(size = 0)) + NoLegend() +
+  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
+  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
+  theme(title = element_text(size = 15)) + ggtitle("number of genes/cell")
+
+VlnPlot(infertile, "nCount_RNA", group.by = 'cell.type.category', pt.size = 0) +
+  theme(axis.title = element_text(size = 0)) + 
+  theme(axis.title = element_text(size = 0)) + NoLegend() +
+  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
+  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
+  theme(title = element_text(size = 15)) + ggtitle("number of transcripts/cell")
+```
+```{r Supplemental Figure 2-2 panel B, message=FALSE, warning=FALSE}
+DefaultAssay(infertile) <- "RNA"
 genes <- c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1")
-VlnPlot(infertile, genes, group.by = 'cell.cat', stack = T, flip = T) + NoLegend()
+VlnPlot(infertile, genes, group.by = 'cell.type.category', pt.size = 0, stack = T, flip = T) +
+  theme(axis.title.x = element_text(size = 0)) +
+  theme(axis.title.y = element_text(size = 12, family = 'Arial')) +
+  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
+  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
+  theme(title = element_text(size = 15)) + ggtitle(" ") + NoLegend()
 ```
-
-
