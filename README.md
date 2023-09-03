@@ -20,13 +20,13 @@ Filtered gene expression matrices outputted from Cellranger for each sample can 
 
 ### Seurat objects 
 The following Seurat objects are available for download:
-1. fertile atlas [DOWNLOAD](https://drive.google.com/file/d/1KvbzWOkscc0lE3NSLBGIq_Md-gsOaAwV/view?usp=sharing)
-2. 5 mo. [DOWNLOAD](https://drive.google.com/file/d/1e0gic8KAreeLGOaZBkYUGXsNafSgEoy7/view?usp=sharing)
-3. 12 mo. [DOWNLOAD](https://drive.google.com/file/d/1erMV2-xBj3gDdCFIPBSI-PNYzHmBJWyA/view?usp=sharing)
-4. 20 mo. [DOWNLOAD](https://drive.google.com/file/d/1FQYQ7sMXVFDNB1DwBsUVL_5m2M3OM6-9/view?usp=sharing)
-5. 22 mo. [DOWNLOAD](https://drive.google.com/file/d/1jF7eSRXMLsCS_5flAvNrCny437fwDmyM/view?usp=sharing)
-6. infertile atlas [DOWNLOAD](https://drive.google.com/file/d/16GpaJbt11ISfJVgVCF8RuPSx1cQLyTeI/view?usp=sharing)
-7. immune atlas [DOWNLOAD](https://drive.google.com/file/d/1o8GzWYiibT4GlMXGKdVwyQ8nopqEdKBC/view?usp=sharing)
-8. SPG atlas [DOWNLOAD](https://drive.google.com/file/d/1pbTDP_YvBr10vTCfojjsf3cQNAVyP34E/view?usp=sharing)
+fertile atlas [DOWNLOAD](https://drive.google.com/file/d/1KvbzWOkscc0lE3NSLBGIq_Md-gsOaAwV/view?usp=sharing)
+5 mo. [DOWNLOAD](https://drive.google.com/file/d/1e0gic8KAreeLGOaZBkYUGXsNafSgEoy7/view?usp=sharing)
+12 mo. [DOWNLOAD](https://drive.google.com/file/d/1erMV2-xBj3gDdCFIPBSI-PNYzHmBJWyA/view?usp=sharing)
+20 mo. [DOWNLOAD](https://drive.google.com/file/d/1FQYQ7sMXVFDNB1DwBsUVL_5m2M3OM6-9/view?usp=sharing)
+22 mo. [DOWNLOAD](https://drive.google.com/file/d/1jF7eSRXMLsCS_5flAvNrCny437fwDmyM/view?usp=sharing)
+infertile atlas [DOWNLOAD](https://drive.google.com/file/d/16GpaJbt11ISfJVgVCF8RuPSx1cQLyTeI/view?usp=sharing)
+immune atlas [DOWNLOAD](https://drive.google.com/file/d/1o8GzWYiibT4GlMXGKdVwyQ8nopqEdKBC/view?usp=sharing)
+SPG atlas [DOWNLOAD](https://drive.google.com/file/d/1pbTDP_YvBr10vTCfojjsf3cQNAVyP34E/view?usp=sharing)
 
 
