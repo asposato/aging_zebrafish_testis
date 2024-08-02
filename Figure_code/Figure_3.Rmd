@@ -1,6 +1,6 @@
 ---
-title: "immune cell atlas and non-immune somatic comparisons"
-author: "Andy Sposato"
+title: "Figure 3"
+author: "Andy Sposato" 
 output: pdf_document
 ---
 
@@ -12,63 +12,93 @@ library(ggplot2)
 library(tidyverse)
 ```
 
-### You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
-
-```{r load fertile and infertile objects }
-fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
-infertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/infertile_atlas.rds")
+```{r load 5-22 mo. and 27 mo. objects}
+testis_5_12_20_22 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/testis_5_12_20_22mo.rds")
+combined <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27testis.rds")
 ```
 
-```{r subset immune cells from fertile and infertile objects}
-fertile_immune <- subset(x = fertile, idents = 12)
-infertile_immune <- subset(old, idents = c(1,3,4,5,6,7,10,11,12,13,16,17,18,19))
+```{r}
+DimPlot(testis_5_12_20_22, group.by = 'cell_type', label = T) + NoLegend() + NoAxes()
+DimPlot(combined, group.by = 'cell.type.cat', label = T) + NoLegend() + NoAxes()
+```
+```{r subset immune cells from both objects}
+young_immune <- subset(x = testis_5_12_20_22, subset = cell_type == 'immune')
+immune_cells <- c("macrophages", "lymphocytes", "neutrophils", "leukocytes", "unknown")
+old_immune <- subset(x = combined, subset = cell.type.cat %in% immune_cells)
 ```
 
-```{r integrate immune cells to generate immune atlas}
-immune.anchors <- FindIntegrationAnchors(object.list = list(fertile_immune, infertile_immune), reduction = "cca", dims = 1:10)
-immune <- IntegrateData(anchorset = immune.anchors, dims = 1:15)
+```{r integrate immune cells}
+immune.anchors <- FindIntegrationAnchors(object.list = list(young_immune, old_immune), reduction = "cca", dims = 1:10, verbose = F)
+immune <- IntegrateData(anchorset = immune.anchors, dims = 1:10, verbose = F)
 DefaultAssay(immune) <- "integrated"
-immune <- ScaleData(immune, assay = "integrated")
-immune <- RunPCA(immune, features = VariableFeatures(object = immune))
-immune <- RunUMAP(immune, reduction = 'pca', dims = 1:10)
-immune <- FindNeighbors(immune, reduction = 'pca', dims = 1:10)
-immune <- FindClusters(immune, resolution = 0.5)
+immune <- ScaleData(immune, assay = "integrated", verbose = F)
+immune <- ScaleData(immune, assay = "RNA", verbose = F)
+immune <- RunPCA(immune, features = VariableFeatures(object = immune), verbose = F)
+immune <- FindNeighbors(immune, reduction = 'pca', dims = 1:15, verbose = F)
+immune <- FindClusters(immune, resolution = 0.5, verbose = F)
+immune <- RunUMAP(immune, reduction = 'pca', dims = 1:15, verbose = F)
 ```
 
-```{r add fertility status metadata}
+```{r assign cell types}
+immune$cell.type <- NULL
+immune$cell.type.cat <- NULL
+immune$cell_type <- NULL
 meta <- immune@meta.data
 meta$cell.id <- row.names(meta)
-meta[meta$age == '5 mo.', "fertility"] <- "fertile"
-meta[meta$age == '12 mo.', "fertility"] <- "fertile"
-meta[meta$age == '20 mo.', "fertility"] <- "fertile"
-meta[meta$age == '22 mo.', "fertility"] <- "fertile"
-meta[meta$age == '27 mo.', "fertility"] <- "infertile"
-fertility <- as.vector(meta$fertility)
-immune <- AddMetaData(immune, fertility, 'fertility')
+meta[meta$seurat_clusters == '0', "cell.type"] <- "macrophages 1"
+meta[meta$seurat_clusters == '1', "cell.type"] <- "T cells 1"
+meta[meta$seurat_clusters == '2', "cell.type"] <- "T cells 2"
+meta[meta$seurat_clusters == '3', "cell.type"] <- "macrophages 2"
+meta[meta$seurat_clusters == '4', "cell.type"] <- "T cells 3"
+meta[meta$seurat_clusters == '5', "cell.type"] <- "T cells 4"
+meta[meta$seurat_clusters == '6', "cell.type"] <- "macrophages 3"
+meta[meta$seurat_clusters == '7', "cell.type"] <- "T cells 5"
+meta[meta$seurat_clusters == '8', "cell.type"] <- "Treg"
+meta[meta$seurat_clusters == '9', "cell.type"] <- "NK"
+meta[meta$seurat_clusters == '10', "cell.type"] <- "macrophages 4"
+meta[meta$seurat_clusters == '11', "cell.type"] <- "B cells"
+meta[meta$seurat_clusters == '12', "cell.type"] <- "T cells 6"
+meta[meta$seurat_clusters == '13', "cell.type"] <- "leukocytes"
+meta[meta$seurat_clusters == '14', "cell.type"] <- "T cells & macrophages"
+meta[meta$seurat_clusters == '15', "cell.type"] <- "neutrophils"
+meta[meta$seurat_clusters == '16', "cell.type"] <- "unknown"
+cell.types <- as.vector(meta$cell.type)
+immune <- AddMetaData(immune, cell.types, 'cell.type')
 ```
 
-# Cell types were assigned using marker genes and stored as a metadata column in the object. 
-# The following code will reproduce the panels in Figures 3 and Supplemental 3.
-# Objects with integrated cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
-
-```{r immune cell atlas with metadata included}
-immune <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/immune_atlas.rds")
-```
-
-```{r Figure 3 Panel A}
-my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4",
-               "T cells 5", "Treg", "macrophages 1",
-               "macrophages 2", "macrophages 3", "macrophages 4",
-               "leukocytes", "B cells", "neutrophils", "NK", "unknown immune")
+```{r}
+my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
 immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
 
+my_levels <- c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo.")
+immune@meta.data$age <- factor(immune@meta.data$age, levels = my_levels)
+```
 
+```{r}
 DimPlot(immune, group.by = 'cell.type', label = T, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
-                                                            "#1E90FF", "#00008B","#87CEFA", 
-                                                            "#FF69B4", "#FFC0CB", "#8B0000", 
-                                                            "#DC143C", "#C8A2C8", "#98FB98", 
-                                                            "#800080", "#2E8B57", "#CD5C5C"), pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
-                                               
+                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
+                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
+                                                            "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel =F) + NoLegend() + NoAxes() + ggtitle(" ")
+
+DimPlot(immune, group.by = 'cell.type', label = F, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
+                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
+                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
+                                                            "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+```{r}
+DimPlot(immune, split.by = 'age', group.by = 'cell.type', label = F, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
+                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
+                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
+                                                            "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+
+# Figure Panels
+```{r Figure 3A}
+DimPlot(immune, group.by = 'cell.type', label = T, repel = T) + NoLegend() + NoAxes()
 ```
 ```{r Figure 3 panel B, message=FALSE, warning=FALSE}
 DefaultAssay(immune) <- "RNA"
@@ -78,300 +108,124 @@ marker_list <- c("coro1a", "ptprc","lck", "gata3", "runx3", "zap70",
                   "mpeg1.1", "csf1ra", "lgmn",
                   "mpx", "lyz",
                   "defbl1", "apodb")
+my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
 
-my_levels_r <- c("unknown immune", "leukocytes","neutrophils", 
-                 "macrophages 4", "macrophages 3", "macrophages 2",
-                 "macrophages 1", "B cells", "NK", "Treg", "T cells 5",
-                 "T cells 4", "T cells 3", "T cells 2", "T cells 1")
+my_levels_r <- c("unknown", "NK", "neutrophils", "B cells", "leukocytes", "macrophages 4", "macrophages 3", "macrophages 2", "macrophages 1", "T cells & macrophages", "Treg", "T cells 6", "T cells 5", "T cells 4", "T cells 3", "T cells 2", "T cells 1")
 immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels_r)
 
-DotPlot(immune, features = marker_list, scale = T,group.by = 'cell.type') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + theme(axis.text.x = element_text(angle =45,hjust = 1, size = 12, family = 'Arial')) + theme(axis.text.y = element_text(angle =0,hjust = 1, size = 12, family = 'Arial')) + theme(legend.title = element_text(size = 12, family = 'Arial')) + theme(axis.title = element_text(size = 0))
+DotPlot(immune, features = marker_list, scale = T, group.by = 'cell.type') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + theme(axis.text.x = element_text(angle =45,hjust = 1, size = 12, family = 'Arial')) + theme(axis.text.y = element_text(angle =0,hjust = 1, size = 12, family = 'Arial')) + theme(legend.title = element_text(size = 12, family = 'Arial')) + theme(axis.title = element_text(size = 0))
+
+```
+```{r fig.height=5, fig.width=8}
+my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
+immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
+
+VlnPlot(immune, features = marker_list, group.by = 'cell.type', stack = T, flip = T) + NoLegend()
 ```
 
-```{r Figure 3 panel C}
-meta <- immune@meta.data
-meta$cell.id <- row.names(meta)
-fertile_immune_cells <- select(meta, c("cell.id", "fertility"))
-fertile_immune_cells <- subset(fertile_immune_cells, fertility == 'fertile')
-fertile_immune_cells <- as.vector(fertile_immune_cells$cell.id)
-DimPlot(immune, cells.highlight = fertile_immune_cells, 
-        cols.highlight = c('darkmagenta'), pt.size = 1.5) + NoLegend() + NoAxes()
+
+```{r}
+my_levels <- c("27 mo.", "27 mo. complete", "5 mo.", "12 mo.", "20 mo.", "22 mo.")
+immune@meta.data$age <- factor(immune@meta.data$age, levels = my_levels)
+DimPlot(immune, group.by = 'age', label = F, cols = c("grey75", "forestgreen","darkmagenta", "darkmagenta","darkmagenta", "darkmagenta"), pt.size = 1.5, order = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+```{r collect counts for somatic cell bar graph in 27 mo.}
+meta_combined <- combined@meta.data
+mo27_complete_meta <- subset(meta_combined, meta_combined$age == '27 mo. complete')
+mo27_incomplete_meta <- subset(meta_combined, meta_combined$age == '27 mo.')
+table(mo27_complete_meta$cell.type.cat)
+table(mo27_incomplete_meta$cell.type.cat)
+```
+```{r collect counts for somatic cell bar graph in 5-22 mo.}
+table(testis_5_12_20_22@meta.data$cell_type)
+```
+```{r subset Sertoli and Leydig cells from 5-22 mo.}
+testis_Sertoli_Leydig <- subset(x = testis_5_12_20_22, subset = cell_type == 'Sertoli & Leydig')
+table(testis_Sertoli_Leydig$age)
+```
+```{r subset blood and SMC from 5-22 mo.}
+testis_blood_SMC <- subset(x = testis_5_12_20_22, subset = cell_type == 'blood & SMC-like')
 ```
 
-# To generate the bar graph for panel D, the CellSelector function from Seurat was used to isolate somatic cell types from the fertile atlas. 
-
-```{r selecting Leydig cells from fertile atlas}
-# subset somatic cells from fertile atlas
-fertile_soma <- subset(fertile, idents = c(11,12,13))
-
-# first identify Leydig cell location with FeaturePlot()
-FeaturePlot(fertile_soma, "rna_star")
-
-plot <- DimPlot(object = fertile_soma)
-# Follow instructions in the terminal to select points
-Leydig <- CellSelector(plot = plot)
-# cells are now stored in the character "Leydig"
-Leydig
-# the length of this character is the total amount of Leydig cells in the fertile atlas
+```{r plot blood and SMC from 5-22 mo.}
+FeaturePlot(testis_blood_SMC, "rna_hbba1", order = T)
+FeaturePlot(testis_blood_SMC, "rna_tagln", order = T)
 ```
 
-```{r selecting macrophages from fertile atlas}
-FeaturePlot(fertile_soma, "rna_csf1ra")
-plot <- DimPlot(object = fertile_soma)
-# Follow instructions in the terminal to select points
-fertile_macrophages <- CellSelector(plot = plot)
-# cells are now stored in the character "fertile_macrophages"
-fertile_macrophages
 
-# add new metadata column to differentiate immune cells types
-meta <- fertile_soma@meta.data
-meta$cell.id <- row.names(meta)
-meta[meta$cell.id %in% fertile_macrophages, "cell.cat"] <- "macrophages"
-cell.cat <- as.vector(meta$cell.cat)
-# this now identifies macrophages by their cell "ID" which is generated by 10X
-fertile_soma <- AddMetaData(fertile_soma, cell.cat, "cell.category")
-
-# somatic cell types were grouped broadly by category and renamed in metadata 
-fertile_soma@meta.data$cell.type[fertile_soma@meta.data$cell.type == 'Sertoli',] <- "SLV"
-fertile_soma@meta.data$cell.type[fertile_soma@meta.data$cell.type == 'Leydig',] <- "SLV"
-fertile_soma@meta.data$cell.type[fertile_soma@meta.data$cell.type == 'vSMC',] <- "SLV"
+```{r count blood and SMC from 5-22 mo.}
+plot = DimPlot(testis_blood_SMC)
+cells <- CellSelector(plot = plot)
+testis_SMC <- testis_blood_SMC[,colnames(testis_blood_SMC) %in% cells]
+testis_blood <- testis_blood_SMC[,!colnames(testis_blood_SMC) %in% cells]
+table(testis_SMC$age)
+table(testis_blood$age)
 ```
 
-```{r isolate numbers for each cell type from each age in the fertile atlas}
-# separate fertile soma by age
-meta <- fertile_soma@meta.data
-meta$cell.id <- row.names(meta)
-meta <- select(meta, c(cell.id, age, cell.type, cell.category))
-mo5_soma_meta <- subset(meta, meta$age == '5 mo.')
-yr1_soma_meta <- subset(meta, meta$age == '12 mo.')
-yr1.6_soma_meta <- subset(meta, meta$age == '20 mo.')
-yr1.8_soma_meta <- subset(meta, meta$age == '22 mo.')
-
-# numbers for each immune cell category from each age are displayed
-table(mo5_soma_meta$cell.category)
-table(yr1_soma_meta$cell.category)
-table(yr1.6_soma_meta$cell.category)
-table(yr1.8_soma_meta$cell.category)
+```{r subset Sertoli and Leydig cells from 5-22 mo.}
+testis_immune <- subset(x = testis_5_12_20_22, subset = cell_type == 'immune')
+table(testis_immune$age)
 ```
 
-```{r isolate numbers for somatic cell types in the infertile atlas}
-# macrophages example
-table(infertile@meta.data$cell.type)
-2147 + 1508 + 1039  
-# 4694 macrophages
+```{r plot lymphocytes and macrophages from 5-22 mo.}
+FeaturePlot(testis_immune, "rna_lck", order = T)
+FeaturePlot(testis_immune, "rna_zap70", order = T)
+FeaturePlot(testis_immune, "rna_mpeg1.1", order = T)
+FeaturePlot(testis_immune, "rna_csf1ra", order = T)
+
+plot = DimPlot(testis_immune)
+cells <- CellSelector(plot = plot)
+testis_macrophages <- testis_immune[,colnames(testis_immune) %in% cells]
+table(testis_macrophages$age)
 ```
 
 ```{r build dataframe for bargraph from cell numbers}
 # the cell percent is determined by dividing the cell count by the total number of cells in the individual age's object
-cell.cats <- c("SLV", "macrophages", "lymphocytes", "other immune", "blood")
-counts <- c(200, 31, 56, 35, 22)
-percents <- counts/12650*100
+cell.cats <- c("SLSMC", "macrophages", "lymphocytes", "other immune", "blood")
+counts <- c(155, 19, 61, 49, 81)
+percents <- counts/16538*100
 age <- c("5 mo.", "5 mo.", "5 mo.", "5 mo.","5 mo.")
 mo5_df <- data.frame(age, cell.cats, counts, percents)
 
 
-counts <- c(138, 17, 62, 18, 53)
+counts <- c(127, 24, 65, 6, 99)
 percents <- counts/14084*100
 age <- c("12 mo.", "12 mo.", "12 mo.", "12 mo.","12 mo.")
 mo12_df <- data.frame(age, cell.cats, counts, percents)
 
 
-counts <- c(28, 10, 14, 15, 4)
-percents <- counts/2636*100
+counts <- c(26, 2, 27, 11, 13)
+percents <- counts/2615*100
 age <- c("20 mo.", "20 mo.", "20 mo.", "20 mo.","20 mo.")
 mo20_df <- data.frame(age, cell.cats, counts, percents)
 
 
-counts <- c(60, 27, 47, 23, 5)
-percents <- counts/3289*100
+counts <- c(38, 23, 61, 12, 29)
+percents <- counts/3286*100
 age <- c("22 mo.", "22 mo.", "22 mo.", "22 mo.","22 mo.")
 mo22_df <- data.frame(age, cell.cats, counts, percents)
 
+counts <- c(17, 54, 53, 33, 15)
+percents <- counts/8682*100
+age <- c("27 mo. complete", "27 mo. complete", "27 mo. complete", "27 mo. complete","27 mo. complete")
+mo27_c_df <- data.frame(age, cell.cats, counts, percents)
 
-counts <- c(1381, 4694, 8804, 605, 1222)
-percents <- counts/32659*100
-age <- c("27 mo.", "27 mo.", "27 mo.", "27 mo.","27 mo.")
-mo27_df <- data.frame(age, cell.cats, counts, percents)
+counts <- c(1227, 4682, 8857, 282, 1258)
+percents <- counts/24469*100
+age <- c("27 mo. incomplete", "27 mo. incomplete", "27 mo. incomplete", "27 mo. incomplete","27 mo. incomplete")
+mo27_i_df <- data.frame(age, cell.cats, counts, percents)
 
 # combine dataframes 
-soma_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_df)
-soma_df$age <- factor(soma_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo."))
+soma_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_c_df, mo27_i_df)
+soma_df$age <- factor(soma_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo. incomplete"))
 ```
 
 ```{r plot relative abundance}
-ggplot(soma_df, aes(fill=age, x=factor(cell.cats, level=c("SLV", "macrophages", "lymphocytes", "other immune", "blood")), y=percents)) + 
-  geom_bar(position = 'dodge', stat = 'identity', color = 'black') + 
+ggplot(soma_df, aes(fill=age, x=factor(cell.cats, level=c("SLSMC", "macrophages", "lymphocytes", "other immune", "blood")), y=percents)) + 
+  geom_bar(position = 'dodge2', stat = 'identity', color = 'black') + 
   theme_classic() + 
   ylab("normalized percent") + 
   xlab("cell type") + 
-  scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87')) + 
+  scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87', '#051732')) + 
   ggtitle("relative abundance of somatic cell types across fertility")
-```
-# To generate the bar graph for panel E, Sertoli, Leydig, vSMC-like and blood cells were isolated from the fertile and infertile single-cell atlases. 
-
-```{r subset into groups based on cluster ID first}
-fertile_SBV <- subset(fertile, idents = 11)
-fertile_L <- subset(fertile, idents = 13)
-infertile_SL <- subset(infertile, idents = 15)
-infertile_V <- subset(infertile, idents = 9)
-```
-
-```{r identify cell types with marker gene expression}
-# some clusters share cells from multiple cell types
-# cluster ID isolation is not enough to separate out these cell types
-DimPlot(fertile_SBV)
-DimPlot(fertile_L)
-DimPlot(infertile_SL)
-FeaturePlot(fertile_SBV, "rna_hbba1")
-FeaturePlot(fertile_SBV, "rna_gsdf")
-FeaturePlot(fertile_SBV, "rna_tagln")
-FeaturePlot(fertile_L, "rna_star")
-FeaturePlot(infertile_SL, "rna_star")
-FeaturePlot(infertile_SL, "rna_gsdf")
-```
-
-```{r use CellSelector to isolate cells by marker gene expression}
-plot <- DimPlot(fertile_SBV)
-fertile_blood <- CellSelector(plot = plot)
-
-plot <- DimPlot(fertile_SBV)
-fertile_vSMC <- CellSelector(plot = plot)
-
-plot <- DimPlot(infertile_SL)
-infertile_Leydig <- CellSelector(plot = plot)
-```
-
-```{r add new cell type column}
-# these will be revised
-fertile_L$cell_type <- "Leydig"
-fertile_SBV$cell_type <- "Sertoli"
-infertile_SL$cell_type <- "Sertoli"
-infertile_V$cell_type <- "vSMC"
-```
-
-```{r fill in blood and vSMC-like cell types in fertile SB}
-meta <- fertile_SBV@meta.data
-meta$cell.id <- row.names(meta)
-meta[meta$cell.id %in% fertile_blood, "cell_type"] <- "blood"
-meta[meta$cell.id %in% fertile_vSMC, "cell_type"] <- "vSMC"
-cell_types <- as.vector(meta$cell_type)
-fertile_SBV <- AddMetaData(fertile_SBV, cell_types, 'cell_type')
-```
-
-```{r fill in Leydig cell type in infertile Leydig}
-meta <- infertile_SL@meta.data
-meta$cell.id <- row.names(meta)
-meta[meta$cell.id %in% infertile_Leydig, "cell_type"] <- "Leydig"
-cell_types <- as.vector(meta$cell_type)
-infertile_SL <- AddMetaData(infertile_SL, cell_types, 'cell_type')
-```
-
-```{r add fertility status column}
-infertile_SL$fertility <- "infertile"
-fertile_SBV$fertility <- "fertile"
-fertile_L$fertility <- "fertile"
-infertile_V$fertlity <- "infertile"
-```
-
-```{r remove blood from fertile_SB}
-fertile_S <- subset(fertile_SBV, cell_type == 'Sertoli')
-fertile_V <- subset(fertile_SBV, cell_type == 'vSMC')
-```
-
-```{r select blood cells from fertile}
-FeaturePlot(fertile, "rna_hbba1")
-plot <- DimPlot(object = fertile)
-fertile_blood <- CellSelector(plot = plot)
-length(fertile_blood)
-```
-
-```{r build data frame with cell type counts for fertile and infertile}
-cell.cats <- c("Sertoli", "Leydig", "blood", "vSMC-like")
-counts <- c(243, 158, 84, 43)
-percents <- counts/528*100
-age <- c("fertile", "fertile", "fertile", "fertile")
-fertile_df <- data.frame(age, cell.cats, counts, percents)
-
-cell.cats <- c("Sertoli", "Leydig", "blood", "vSMC-like")
-counts <- c(194, 39, 1222, 1148)
-percents <- counts/2603*100
-age <- c("infertile", "infertile", "infertile", "infertile")
-infertile_df <- data.frame(age, cell.cats, counts, percents)
-
-df <- rbind(fertile_df, infertile_df)
-```
-
-
-```{r Figure 3 Panel E}
-df$cell.cats <- factor(df$cell.cats, levels = c("Leydig", "Sertoli", "blood", "vSMC-like"))
-
-ggplot(df, aes(fill=cell.cats, x=factor(age, level=c("fertile", "infertile")), y=percents)) + 
-  geom_bar(position = 'stack', stat = 'identity', color = 'black', width = 0.5) + theme_classic() + 
-  ylab("composition %") + xlab("fertility status") + theme(plot.title = element_text(hjust = 0.5)) + scale_fill_manual(values=c('#FFDDDD', '#FF6666', '#A52A2A', "#541212")) + ggtitle("shift in non-immune somatic cells") + theme(aspect.ratio=16/9)
-```
-
-
-```{r Supplemental Figure 3-1 Panel A}
-DimPlot(immune, split.by = 'age', cols = c("#B0E0E6", "#4169E1", "#FF69B4", "#FFC0CB","#2E8B57", "#87CEFA",
-                 "#40E0D0", "#8B0000","#DC143C", "#800080", "#98FB98","#C8A2C8",
-                 "#1E90FF", "#CD5C5C", "#00008B"), pt.size = 1.5) + NoLegend() + NoAxes()
-```
-
-```{r Supplemental Figure 3-1 Panel B}
-DefaultAssay(immune) <- "RNA"
-my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4",
-               "T cells 5", "Treg", "macrophages 1",
-               "macrophages 2", "macrophages 3", "macrophages 4",
-               "leukocytes", "B cells", "neutrophils", "NK", "unknown immune")
-immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
-marker_list <- c("coro1a", "ptprc","lck", "gata3", "runx3", "zap70", 
-                  "foxp3a", "cd4-1", 
-                  "nkl.2", "pax5", 
-                  "mpeg1.1", "csf1ra", "lgmn",
-                  "mpx", "lyz",
-                  "defbl1", "apodb")
-VlnPlot(immune, marker_list, group.by = 'cell.type', stack = T, flip = T) + NoLegend() + theme(axis.text = element_text(family = 'Arial', size = 9)) + 
-  theme(axis.title.y = element_text(family = 'Arial', size = 9)) +
-  theme(axis.title.x = element_text(size = 0)) + 
-  theme(axis.text.y = element_text(family = "Arial", size = 7))
-```
-
-```{r message=FALSE, warning=FALSE}
-FeaturePlot(fertile, "rna_acta2", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_acta2", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(fertile, "rna_dcn", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_dcn", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-```
-
-```{r a heatmap of top 5 differentially expressed genes for each cell type in immune atlas, message=FALSE, warning=FALSE}
-# a similar graph can easily be generated using the shiny app's bubble/heatmap options
-immune <- ScaleData(immune, assay = 'RNA')
-Tcells1 <- c("ccl34b.4", "ccl38a.4", "crema", "tnfrsf9a", "traf1")
-Tcells2 <- c("sat1a.1", "ccl36.1", "ca2", "il2rb", "fosab")
-macrophages1 <- c("lgals2a", "lygl1", "cd74a", "c1qc", "c1qb")
-macrophages2 <- c("ccl35.1", "hspb1", "marcksl1b", "timp2b", "fthl27")
-NK <- c("nkl.2", "il1fma", "ccl36.1", "ccl38.6", "slc41a1")
-Treg <- c("foxp3a", "il1rl1", "cd4-1", "cd28l", "cd28")
-Tcells3 <- c("zp2.5", "setbp1", "crp2", "org", "hbba1")
-macrophages3 <- c("h1m", "zp3", "cldng", "tmsb5", "ccnb1")
-macrophages4 <- c("grn2", "lgmn", "grn1", "ctsd", "gpnmb")
-neutrophils <- c("lgals2b", "krt91", "krt92", "krt4", "cldnh")
-Bcells <- c("igic1s1", "sftpba", "p2rx3a", "ctsbb", "ccl35.1")
-leukocytes <- c("spink2.2", "c3a.4", "itln1", "cfh", "c3a.5")
-Tcells4 <- c("zgc:110216", "hist1h2a6", "zgc:113984.1", "hist2h3c", "hist1h4l")
-unknown <- c("apodb", "defbl1", "lypc", "apoda.1", "alx4a")
-Tcells5 <- c("il4", "il13", "il11b", "csf3a", "gata3")
-
-my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4",
-               "T cells 5", "Treg", "macrophages 1",
-               "macrophages 2", "macrophages 3", "macrophages 4",
-               "leukocytes", "B cells", "neutrophils", "NK", "unknown immune")
-immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
-
-features_list <- c(Tcells1, Tcells2, Tcells3, Tcells4, Tcells5, Treg, NK,
-                   Bcells, macrophages1, macrophages2, macrophages3, macrophages4, 
-                   neutrophils, leukocytes, unknown)
-
-DoHeatmap(immune, assay = 'RNA', slot = "scale.data", features = features_list, raster = F, lines.width = 50, label = T, size = 2, angle = 45, group.by = "cell.type", group.colors = c("#B0E0E6", "#4169E1", "#40E0D0", "#1E90FF", "#00008B","#87CEFA","#FF69B4", "#FFC0CB", "#8B0000", "#DC143C", "#C8A2C8", "#98FB98", "#800080","#2E8B57", "#CD5C5C"), draw.lines = T) + theme(axis.text.y = element_text(size = 7)) + scale_fill_viridis_c(option="rocket", direction = 1) + 
-  theme(panel.border = element_blank(), panel.grid.minor = element_blank() + panel.grid.major = element_blank()) + theme(axis.text = element_text(family = 'Arial', size = 10))
 ```
