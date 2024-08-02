@@ -1,14 +1,14 @@
-# Germ cells do not progress through spermatogenesis in the infertile zebrafish testis
+# Germ cell progression through zebrafish spermatogenesis declines with age
 
-Andrea L. Sposato, Darren R. Llewellyn, Jenna M. Weber, Hailey L. Hollins, Madison N. Schrock, Jeffrey A. Farrell, James A. Gagnon
+Andrea L. Sposato, Hailey L. Hollins, Darren R. Llewellyn, Jenna M. Weber, Madison N. Schrock, Jeffrey A. Farrell, James A. Gagnon
 
-Vertebrate spermatogonial stem cells maintain sperm production over the lifetime of an animal but fertility declines with age. While morphological studies have greatly informed our understanding of typical spermatogenesis, the molecular and cellular mechanisms underlying spermatogenesis are not yet understood, particularly with respect to the onset of fertility. We used single-cell RNA sequencing to generate a developmental atlas of the zebrafish testis. Using 5 timepoints across the adult life of a zebrafish, we described cellular profiles in the testis during and after fertility. While all germ cell stages of spermatogenesis are detected in testes from fertile adult zebrafish, testes from older infertile males only contained spermatogonia and a reduced population of spermatocytes. These remaining germ cells are transcriptionally distinct from fertile spermatogonia. Immune cells including macrophages and lymphocytes drastically increase in abundance in infertile testes. Our developmental atlas reveals the cellular changes as the testis ages and defines a molecular roadmap for the regulation of male fertility.
+Vertebrate spermatogonial stem cells maintain sperm production over the lifetime of an animal but fertility declines with age. While morphological studies have informed our understanding of typical spermatogenesis, the molecular and cellular mechanisms underlying the maintenance and decline of spermatogenesis are not yet understood. We used single-cell RNA sequencing to generate a developmental atlas of the aging zebrafish testis. All testes contained spermatogonia, but we observed a progressive decline in spermatogenesis that correlates with age. Testes from some older males only contained spermatogonia and a reduced population of spermatocytes. Spermatogonia in older males are transcriptionally distinct from spermatogonia in testes capable of robust spermatogenesis. Immune cells including macrophages and lymphocytes drastically increase in abundance in testes that cannot complete spermatogenesis. Our developmental atlas reveals the cellular changes as the testis ages and defines a molecular roadmap for the regulation of spermatogenesis. 
 
 # Explore data with Shiny app
-You can easily explore the single-cell data using our [web-based application](https://sposato.shinyapps.io/testis_shiny_app/).
+You can easily explore the single-cell data using our [web-based application](https://sposato.shinyapps.io/aging_zebrafish_testis/).
 
 # Code
-R markdown code used to process data and generate all figures for the manuscript can be accessed in the Figure_code folder.
+R markdown code used to process data and generate all figures for the manuscript can be accessed in the Figure_code folder. Code for supplemental figures are grouped in with the relevant main figure. 
 
 # Data
 
@@ -21,22 +21,22 @@ Filtered gene expression matrices outputted from Cellranger for each sample can 
 ### Seurat objects 
 The following Seurat objects are available for download:
 
-fertile atlas [DOWNLOAD](https://drive.google.com/file/d/1KvbzWOkscc0lE3NSLBGIq_Md-gsOaAwV/view?usp=sharing)
+Main Figures
+5-22 mo. atlas (Figure 1C) [DOWNLOAD](https://drive.google.com/file/d/1XEFHbI0cxR0YiwYRFFJff_xWQ_QN0CFw/view?usp=sharing)
 
-infertile atlas [DOWNLOAD](https://drive.google.com/file/d/16GpaJbt11ISfJVgVCF8RuPSx1cQLyTeI/view?usp=sharing)
+27 mo. atlas (Figure 2C) [DOWNLOAD](https://drive.google.com/file/d/1JpmZJdrAF0ecNJcbT_0yd9fzSzy5ntaM/view?usp=sharing)
 
-immune atlas [DOWNLOAD](https://drive.google.com/file/d/1o8GzWYiibT4GlMXGKdVwyQ8nopqEdKBC/view?usp=sharing)
+immune atlas (Figure 3A) [DOWNLOAD](https://drive.google.com/file/d/1Q4Oy4bG3qMzvSuz7f-8JiDKrEtcpt8Qe/view?usp=sharing)
 
-SPG atlas [DOWNLOAD](https://drive.google.com/file/d/1pbTDP_YvBr10vTCfojjsf3cQNAVyP34E/view?usp=sharing)
+SPG atlas (Figure 3C) [DOWNLOAD](https://drive.google.com/file/d/1NB9Pi73mCTc0y6FKByB8X5uSn6tEx2GS/view?usp=sharing)
 
+Figure S1B
+5 mo. [DOWNLOAD](https://drive.google.com/file/d/1X1gbmF9gEHzdPXFDxKvBFZBO0lARQ35o/view?usp=sharing)
 
-5 mo. [DOWNLOAD](https://drive.google.com/file/d/1e0gic8KAreeLGOaZBkYUGXsNafSgEoy7/view?usp=sharing)
+12 mo. [DOWNLOAD](https://drive.google.com/file/d/194f2ahQB2dTG3PTuSAMA47HRYEPVOU5M/view?usp=sharing)
 
-12 mo. [DOWNLOAD](https://drive.google.com/file/d/1erMV2-xBj3gDdCFIPBSI-PNYzHmBJWyA/view?usp=sharing)
+20 mo. [DOWNLOAD](https://drive.google.com/file/d/18jMrmVg-Rs8qGvF6EO_MvFwRkEab6W47/view?usp=sharing)
 
-20 mo. [DOWNLOAD](https://drive.google.com/file/d/1FQYQ7sMXVFDNB1DwBsUVL_5m2M3OM6-9/view?usp=sharing)
-
-22 mo. [DOWNLOAD](https://drive.google.com/file/d/1jF7eSRXMLsCS_5flAvNrCny437fwDmyM/view?usp=sharing)
-
+22 mo. [DOWNLOAD](https://drive.google.com/file/d/1rp9jZmYslALasu2Gh-w5HVno8Z-Lo8jb/view?usp=sharing)
 
 
