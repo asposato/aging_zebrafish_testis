@@ -1,140 +1,669 @@
 ---
-title: "infertile atlas data processing and integration"
+title: "Figure 2"
 author: "Andy Sposato" 
 output: pdf_document
 ---
 
-```{r load required packages, message=FALSE, warning=FALSE}
+```{r load required packages}
 library(Seurat)
 library(stats)
 library(viridis)
 library(ggplot2)
 ```
 
-# You will need to replace file paths with your own to reproduce results. See github page for data download instructions. 
+```{r read in objects}
+mo27testis  <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete.rds")
+mo27testis_i  <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete.rds")
+combined  <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27testis.rds")
+mo27_soma  <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_soma.rds")
+mo27_germ  <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_germ.rds")
+```
 
-```{r create 27 mo. sub objects}
+```{r create 27 mo. complete sub objects}
+A1.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/aged_testes_2024/X1/filtered_feature_bc_matrix/')
+A1 <- CreateSeuratObject(counts = A1.data, project = '23822R', min.cells = 3)
+A1[['percent.mt']] <- PercentageFeatureSet(A1, pattern = "mt-")
+A1$sub.sample <- "27mo_C"
+A1$age <- "27 mo. complete"
+A1$seqID <- "23822R"
+A1$sperm.status <- "complete"
+# summary(A1$nFeature_RNA)
+# to set cutoff for upperbound outliers: 
+#   determine quartiles, with summary() # 1260
+#   calculate IQR with IQR() # 822
+#   cutoff = (Q3 + 1.5*IQR) + 1
+#   1260 + 1.5*822 + 1
+A1 <- subset(A1, subset = nFeature_RNA > 200 & nFeature_RNA < 2494)
+A1 <- subset(A1, subset = percent.mt < 5)
+A1 <- NormalizeData(A1)
+A1 <- FindVariableFeatures(A1)
+A1 <- ScaleData(A1)
+A1 <- RunPCA(A1)
+rm(A1.data)
+
+A2.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/aged_testes_2024/X2/filtered_feature_bc_matrix/')
+A2 <- CreateSeuratObject(counts = A2.data, project = '23822R', min.cells = 3)
+A2[['percent.mt']] <- PercentageFeatureSet(A2, pattern = "mt-")
+A2$sub.sample <- "27mo_C"
+A2$age <- "27 mo. complete"
+A2$seqID <- "23822R"
+A2$sperm.status <- "complete"
+# summary(A2$nFeature_RNA)
+# to set cutoff for upperbound outliers: 
+#   determine quartiles, with summary() # 1597
+#   calculate IQR with IQR() # 1082.25
+#   cutoff = (Q3 + 1.5*IQR) + 1
+#   1597 + 1.5*1082.25 + 1
+A2 <- subset(A2, subset = nFeature_RNA > 200 & nFeature_RNA < 3222)
+A2 <- subset(A2, subset = percent.mt < 5)
+A2 <- NormalizeData(A2)
+A2 <- FindVariableFeatures(A2)
+A2 <- ScaleData(A2)
+A2 <- RunPCA(A2)
+rm(A2.data)
+
+testis.anchors <- FindIntegrationAnchors(object.list = list(A1, A2), dims = 1:20)
+mo27testisA <- IntegrateData(anchorset = testis.anchors, dims = 1:20)
+DefaultAssay(mo27testisA) <- "integrated"
+mo27testisA <- ScaleData(mo27testisA)
+mo27testisA <- RunPCA(mo27testisA, features = VariableFeatures(object = mo27testisA))
+mo27testisA <- FindNeighbors(mo27testisA, reduction = 'pca', dims = 1:20)
+mo27testisA <- FindClusters(mo27testisA, resolution = 0.5)
+mo27testisA <- RunUMAP(mo27testisA, reduction = 'pca', dims = 1:20)
+
+B1.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/aged_testes_2024/X3/filtered_feature_bc_matrix/')
+B1 <- CreateSeuratObject(counts = B1.data, project = '23822R', min.cells = 3)
+B1[['percent.mt']] <- PercentageFeatureSet(B1, pattern = "mt-")
+B1$sub.sample <- "27mo_D"
+B1$age <- "27 mo. complete"
+B1$seqID <- "23822R"
+B1$sperm.status <- "complete"
+# summary(B1$nFeature_RNA)
+# to set cutoff for upperbound outliers: 
+#   determine quartiles, with summary() # 1481
+#   calculate IQR with IQR() # 949
+#   cutoff = (Q3 + 1.5*IQR) + 1
+#   1481 + 1.5*949 + 1
+B1 <- subset(B1, subset = nFeature_RNA > 200 & nFeature_RNA < 2906)
+B1 <- subset(B1, subset = percent.mt < 5)
+B1 <- NormalizeData(B1)
+B1 <- FindVariableFeatures(B1)
+B1 <- ScaleData(B1)
+B1 <- RunPCA(B1)
+rm(B1.data)
+
+B2.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/aged_testes_2024/X4/filtered_feature_bc_matrix/')
+B2 <- CreateSeuratObject(counts = B2.data, project = '23822R', min.cells = 3)
+B2[['percent.mt']] <- PercentageFeatureSet(B2, pattern = "mt-")
+B2$sub.sample <- "27mo_D"
+B2$age <- "27 mo. complete"
+B2$seqID <- "23822R"
+B2$sperm.status <- "complete"
+# summary(B2$nFeature_RNA)
+# to set cutoff for upperbound outliers: 
+#   determine quartiles, with summary() # 1503
+#   calculate IQR with IQR() # 959
+#   cutoff = (Q3 + 1.5*IQR) + 1
+#   1503 + 1.5*959 + 1
+B2 <- subset(B2, subset = nFeature_RNA > 200 & nFeature_RNA < 2943)
+B2 <- subset(B2, subset = percent.mt < 5)
+B2 <- NormalizeData(B2)
+B2 <- FindVariableFeatures(B2)
+B2 <- ScaleData(B2)
+B2 <- RunPCA(B2)
+rm(B2.data)
+
+testis.anchors <- FindIntegrationAnchors(object.list = list(B1, B2), dims = 1:20)
+mo27testisB <- IntegrateData(anchorset = testis.anchors, dims = 1:20)
+DefaultAssay(mo27testisB) <- "integrated"
+mo27testisB <- ScaleData(mo27testisB)
+mo27testisB <- RunPCA(mo27testisB, features = VariableFeatures(object = mo27testisB))
+mo27testisB <- FindNeighbors(mo27testisB, reduction = 'pca', dims = 1:20)
+mo27testisB <- FindClusters(mo27testisB, resolution = 0.5)
+mo27testisB <- RunUMAP(mo27testisB, reduction = 'pca', dims = 1:20)
+```
+
+```{r create 27 mo. complete object}
+# combine data
+testis.anchors <- FindIntegrationAnchors(object.list = list(mo27testisA, mo27testisB), dims = 1:20)
+mo27testis <- IntegrateData(anchorset = testis.anchors, dims = 1:20)
+DefaultAssay(mo27testis) <- "integrated"
+mo27testis <- ScaleData(mo27testis, assay = "RNA")
+mo27testis <- ScaleData(mo27testis, assay = "integrated")
+mo27testis <- RunPCA(mo27testis, features = VariableFeatures(object = mo27testis))
+mo27testis <- FindNeighbors(mo27testis, reduction = 'pca', dims = 1:20)
+mo27testis <- FindClusters(mo27testis, resolution = 0.5)
+mo27testis <- RunUMAP(mo27testis, reduction = 'pca', dims = 1:30, spread = 1)
+```
+
+```{r assign cell types to each cluster for 27 mo. complete}
+meta <- mo27testis@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_type"] <- "spermatocytes 3"
+meta[meta$seurat_clusters == '1', "cell_type"] <- "spermatocytes 1"
+meta[meta$seurat_clusters == '2', "cell_type"] <- "spermatogonia 3"
+meta[meta$seurat_clusters == '3', "cell_type"] <- "spermatogonia 2"
+meta[meta$seurat_clusters == '4', "cell_type"] <- "spermatocytes 2"
+meta[meta$seurat_clusters == '5', "cell_type"] <- "spermatogonia 4"
+meta[meta$seurat_clusters == '6', "cell_type"] <- "spermatozoa"
+meta[meta$seurat_clusters == '7', "cell_type"] <- "spermatids"
+meta[meta$seurat_clusters == '8', "cell_type"] <- "blood, Sertoli & Leydig"
+meta[meta$seurat_clusters == '9', "cell_type"] <- "spermatogonia 1"
+meta[meta$seurat_clusters == '10', "cell_type"] <- "immune cells"
+meta[meta$seurat_clusters == '11', "cell_type"] <- "unknown"
+cell_types <- as.vector(meta$cell_type)
+mo27testis <- AddMetaData(mo27testis, cell_types, 'cell.type')
+mo27testis$mo27testis.cluster <- mo27testis@meta.data$seurat_clusters
+```
+
+```{r assign cell types categories to each cluster for 27 mo. complete}
+meta <- mo27testis@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_type"] <- "meiotic germ cells"
+meta[meta$seurat_clusters == '1', "cell_type"] <- "meiotic germ cells"
+meta[meta$seurat_clusters == '2', "cell_type"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '3', "cell_type"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '4', "cell_type"] <- "meiotic germ cells"
+meta[meta$seurat_clusters == '5', "cell_type"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '6', "cell_type"] <- "post-meiotic germ cells"
+meta[meta$seurat_clusters == '7', "cell_type"] <- "post-meiotic germ cells"
+meta[meta$seurat_clusters == '8', "cell_type"] <- "somatic cells"
+meta[meta$seurat_clusters == '9', "cell_type"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '10', "cell_type"] <- "immune cells"
+meta[meta$seurat_clusters == '11', "cell_type"] <- "somatic cells"
+cell_types <- as.vector(meta$cell_type)
+mo27testis <- AddMetaData(mo27testis, cell_types, 'cell.type.cat')
+```
+
+```{r save mo27 complete spermatogenesis object}
+saveRDS(mo27testis, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete.rds")
+```
+
+```{r create 27 mo. incomplete object}
 mo27_A.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/19226R_out/X3/outs/filtered_gene_bc_matrices/')
 mo27_A <- CreateSeuratObject(counts = mo27_A.data, project = 'mo27_A', min.cells = 3)
 mo27_A[['percent.mt']] <- PercentageFeatureSet(mo27_A, pattern = "mt-")
-mo27_A$sub.sample <- "mo27_A"
+mo27_A$sub.sample <- "27mo_A"
 mo27_A$age <- "27 mo."
+mo27_A$seqID <- "19226R"
+mo27_A$sperm.status <- "incomplete"
+# summary(mo27_A$nFeature_RNA)
+# to set cutoff for upperbound outliers: 
+#   determine quartiles, with summary() # 1566
+#   calculate IQR with IQR() # 919
+#   cutoff = (Q3 + 1.5*IQR) + 1
+#   1566 + 1.5*919 + 1
 mo27_A <- subset(mo27_A, subset = nFeature_RNA > 200 & nFeature_RNA < 2945)
 mo27_A <- subset(mo27_A, subset = percent.mt < 5)
 mo27_A <- NormalizeData(mo27_A)
 mo27_A <- FindVariableFeatures(mo27_A)
 
-mo27_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/19226R_out/X3/outs/filtered_gene_bc_matrices/')
+mo27_B.data <- Read10X(data.dir = '/Volumes/LaCie/seurat_objects/19226R_out/X4/outs/filtered_gene_bc_matrices/')
 mo27_B <- CreateSeuratObject(counts = mo27_B.data, project = 'mo27_B', min.cells = 3)
 mo27_B[['percent.mt']] <- PercentageFeatureSet(mo27_B, pattern = "mt-")
-mo27_B$sub.sample <- "mo27_B"
+mo27_B$sub.sample <- "27mo_B"
 mo27_B$age <- "27 mo."
+mo27_B$seqID <- "19226R"
+mo27_B$sperm.status <- "incomplete"
+# summary(mo27_A$nFeature_RNA)
+# to set cutoff for upperbound outliers: 
+#   determine quartiles, with summary() # 1373
+#   calculate IQR with IQR() # 752
+#   cutoff = (Q3 + 1.5*IQR) + 1
+#   1373 + 1.5*752 + 1
 mo27_B <- subset(mo27_B, subset = nFeature_RNA > 200 & nFeature_RNA < 2502)
 mo27_B <- subset(mo27_B, subset = percent.mt < 5)
 mo27_B <- NormalizeData(mo27_B)
 mo27_B <- FindVariableFeatures(mo27_B)
-```
 
-```{r integrate 27 mo. data}
 # combine data
 testis.anchors <- FindIntegrationAnchors(object.list = list(mo27_A, mo27_B), dims = 1:20)
-testis.combined <- IntegrateData(anchorset = testis.anchors, dims = 1:20)
-DefaultAssay(testis.combined) <- "integrated"
-testis.combined <- ScaleData(testis.combined)
-testis.combined <- RunPCA(testis.combined, features = VariableFeatures(object = testis.combined))
-testis.combined <- FindNeighbors(testis.combined, reduction = 'pca', dims = 1:20)
-testis.combined <- FindClusters(testis.combined, resolution = 0.5)
-testis.combined <- RunUMAP(testis.combined, reduction = 'pca', dims = 1:20)
+mo27testis_i <- IntegrateData(anchorset = testis.anchors, dims = 1:20)
+DefaultAssay(mo27testis_i) <- "integrated"
+mo27testis_i <- ScaleData(mo27testis_i)
+mo27testis_i <- RunPCA(mo27testis_i, features = VariableFeatures(object = mo27testis_i))
+mo27testis_i <- FindNeighbors(mo27testis_i, reduction = 'pca', dims = 1:20)
+mo27testis_i <- FindClusters(mo27testis_i, resolution = 0.5)
+mo27testis_i <- RunUMAP(mo27testis_i, reduction = 'pca', dims = 1:20)
 ```
 
-# Cell types were assigned using marker genes and stored as a metadata column in the object. 
-# The following code will reproduce the panels in Figures 2 and Supplemental 2.
-# Objects with cell type metadata are set to load here if one wishes to skip object generation and manual cell type assignment.
-
-```{r infertile atlas with cell type metadata included}
-infertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/infertile_atlas.rds")
+```{r assign cell types to each cluster for 27 mo. incomplete}
+meta <- mo27testis_i@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_type"] <- "spermatogonia 1"
+meta[meta$seurat_clusters == '1', "cell_type"] <- "T cells 1"
+meta[meta$seurat_clusters == '2', "cell_type"] <- "spermatogonia 2"
+meta[meta$seurat_clusters == '3', "cell_type"] <- "macrophages 1"
+meta[meta$seurat_clusters == '4', "cell_type"] <- "T cells 2"
+meta[meta$seurat_clusters == '5', "cell_type"] <- "macrophages 2"
+meta[meta$seurat_clusters == '6', "cell_type"] <- "Treg"
+meta[meta$seurat_clusters == '7', "cell_type"] <- "NK cells"
+meta[meta$seurat_clusters == '8', "cell_type"] <- "blood"
+meta[meta$seurat_clusters == '9', "cell_type"] <- "SMC-like"
+meta[meta$seurat_clusters == '10', "cell_type"] <- "macrophages 3"
+meta[meta$seurat_clusters == '11', "cell_type"] <- "T cells 3"
+meta[meta$seurat_clusters == '12', "cell_type"] <- "B cells"
+meta[meta$seurat_clusters == '13', "cell_type"] <- "neutrophils & epithelial cells"
+meta[meta$seurat_clusters == '14', "cell_type"] <- "spermatocytes"
+meta[meta$seurat_clusters == '15', "cell_type"] <- "Sertoli & Leydig"
+meta[meta$seurat_clusters == '16', "cell_type"] <- "leukocytes"
+meta[meta$seurat_clusters == '17', "cell_type"] <- "T cells 4"
+meta[meta$seurat_clusters == '18', "cell_type"] <- "unknown immune"
+meta[meta$seurat_clusters == '19', "cell_type"] <- "T cells 5"
+cell_types <- as.vector(meta$cell_type)
+mo27testis_i <- AddMetaData(mo27testis_i, cell_types, 'cell.type')
 ```
 
-```{r Figure 2 panel C}
-DimPlot(infertile, group.by = 'cell.type', label = T, pt.size = 1.5, repel = T) + NoLegend() + NoAxes()
+```{r assign cell types categories to each cluster for 27 mo. incomplete}
+meta <- mo27testis_i@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_group"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '1', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '2', "cell_group"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '3', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '4', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '5', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '6', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '7', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '8', "cell_group"] <- "blood"
+meta[meta$seurat_clusters == '9', "cell_group"] <- "SMC-like"
+meta[meta$seurat_clusters == '10', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '11', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '12', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '13', "cell_group"] <- "leukocytes"
+meta[meta$seurat_clusters == '14', "cell_group"] <- "meiotic germ cells"
+meta[meta$seurat_clusters == '15', "cell_group"] <- "Sertoli & Leydig"
+meta[meta$seurat_clusters == '16', "cell_group"] <- "leukocytes"
+meta[meta$seurat_clusters == '17', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '18', "cell_group"] <- "unknown immune"
+meta[meta$seurat_clusters == '19', "cell_group"] <- "lymphocytes"
+cell_groups <- as.vector(meta$cell_group)
+mo27testis_i <- AddMetaData(mo27testis_i, cell_groups, 'cell.type.cat')
 ```
 
-```{r Figure 2 panel D, message=FALSE, warning=FALSE}
-DefaultAssay(infertile) <- "RNA"
-FeaturePlot(infertile, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle("ddx4") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle("sycp3") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle("ccnb3") + scale_colour_viridis(option = "rocket", direction = -1)
-
+```{r integrate all 27 mo samples, message=FALSE, warning=FALSE}
+# combine data
+anchors <- FindIntegrationAnchors(object.list = list(mo27testis, mo27testis_i), dims = 1:20)
+combined <- IntegrateData(anchorset = anchors, dims = 1:20)
+DefaultAssay(combined) <- "integrated"
+combined <- ScaleData(combined)
+combined <- RunPCA(combined, features = VariableFeatures(object = combined))
+combined <- FindNeighbors(combined, reduction = 'pca', dims = 1:20)
+combined <- FindClusters(combined, resolution = 0.5)
+combined <- RunUMAP(combined, reduction = 'pca', dims = 1:20, verbose = F)
 ```
 
-```{r Figure 2 panel E, message=FALSE, warning=FALSE}
-DefaultAssay(infertile) <- "RNA"
-FeaturePlot(infertile, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
-```
-# Note: the expression of any gene detected in the infertile testis can be explored easily using the shiny app. See github page. 
-
-
-```{r binned cell types into more general categories}
-meta <- infertile@meta.data
-meta[meta$cell.type == "spermatogonia 1", "cell.cat"] <- "germ cells"
-meta[meta$cell.type == "spermatogonia 2", "cell.cat"] <- "germ cells"
-meta[meta$cell.type == "spermatocytes", "cell.cat"] <- "germ cells"
-meta[meta$cell.type == "Sertoli & Leydig", "cell.cat"] <- "Sertoli & Leydig"
-meta[meta$cell.type == "vSMC", "cell.cat"] <- "vSMC-like"
-meta[meta$cell.type == "blood", "cell.cat"] <- "blood"
-meta[meta$cell.type == "macrophages 1", "cell.cat"] <- "immune"
-meta[meta$cell.type == "macrophages 2", "cell.cat"] <- "immune"
-meta[meta$cell.type == "macrophages 3", "cell.cat"] <- "immune"
-meta[meta$cell.type == "T cells 1", "cell.cat"] <- "immune"
-meta[meta$cell.type == "T cells 2", "cell.cat"] <- "immune"
-meta[meta$cell.type == "T cells 3", "cell.cat"] <- "immune"
-meta[meta$cell.type == "T cells 4", "cell.cat"] <- "immune"
-meta[meta$cell.type == "T cells 5", "cell.cat"] <- "immune"
-meta[meta$cell.type == "Treg", "cell.cat"] <- "immune"
-meta[meta$cell.type == "B cells", "cell.cat"] <- "immune"
-meta[meta$cell.type == "NK cells", "cell.cat"] <- "immune"
-meta[meta$cell.type == "neutrophils", "cell.cat"] <- "immune"
-meta[meta$cell.type == "leukocytes", "cell.cat"] <- "immune"
-meta[meta$cell.type == "unknown immune", "cell.cat"] <- "immune"
-cell.cats <- as.vector(meta$cell.cat)
-infertile <- AddMetaData(infertile, cell.cats, "cell.type.category")
+```{r exploring all 27 mo samples}
+DefaultAssay(combined) <- "RNA"
+DimPlot(combined, group.by = 'seurat_clusters', label=T) + NoLegend() + NoAxes()
+#DimPlot(combined, group.by = 'cell.type', label=T) + NoLegend() + NoAxes()
+DimPlot(combined, group.by = 'cell.type.cat', label=T) + NoLegend() + NoAxes()
+DimPlot(combined, group.by = 'sperm.status', label=T) + NoLegend() + NoAxes()
+DimPlot(combined, split.by = 'seqID', label=T) + NoLegend() + NoAxes()
+FeaturePlot(combined, "ddx4")
+FeaturePlot(combined, "sycp3")
+FeaturePlot(combined, "ccnb3")
+FeaturePlot(combined, "tssk6")
 ```
 
-```{r Supplemental Figure 2-2 panel A, message=FALSE, warning=FALSE}
-my_levels <- c("germ cells", "Sertoli & Leydig", "vSMC-like", "blood", "immune")
-infertile@meta.data$cell.type.category <- factor(x = infertile@meta.data$cell.type.category, levels = my_levels)
-
-VlnPlot(infertile, "percent.mt", group.by = 'cell.type.category', pt.size = 0) +
-  theme(axis.title = element_text(size = 0)) + 
-  theme(axis.title = element_text(size = 0)) + NoLegend() +
-  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
-  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
-  theme(title = element_text(size = 15)) + ggtitle("% mitochondrial reads/cell")
-
-VlnPlot(infertile, "nFeature_RNA", group.by = 'cell.type.category', pt.size = 0) +
-  theme(axis.title = element_text(size = 0)) + 
-  theme(axis.title = element_text(size = 0)) + NoLegend() +
-  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
-  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
-  theme(title = element_text(size = 15)) + ggtitle("number of genes/cell")
-
-VlnPlot(infertile, "nCount_RNA", group.by = 'cell.type.category', pt.size = 0) +
-  theme(axis.title = element_text(size = 0)) + 
-  theme(axis.title = element_text(size = 0)) + NoLegend() +
-  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
-  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
-  theme(title = element_text(size = 15)) + ggtitle("number of transcripts/cell")
+```{r select germ cells}
+germ_cells <- c("pre-meiotic germ cells", "meiotic germ cells", "post-meiotic germ cells")
+mo27testis_i_germ <- subset(mo27testis_i, cell.type.cat %in% germ_cells)
+mo27testis_germ <- subset(mo27testis, cell.type.cat %in% germ_cells)
 ```
-```{r Supplemental Figure 2-2 panel B, message=FALSE, warning=FALSE}
-DefaultAssay(infertile) <- "RNA"
-genes <- c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1")
-VlnPlot(infertile, genes, group.by = 'cell.type.category', pt.size = 0, stack = T, flip = T) +
-  theme(axis.title.x = element_text(size = 0)) +
-  theme(axis.title.y = element_text(size = 12, family = 'Arial')) +
-  theme(axis.text.x = element_text(size = 12, family = 'Arial')) + 
-  theme(axis.text.y = element_text(size = 12, famil = 'Arial')) +
-  theme(title = element_text(size = 15)) + ggtitle(" ") + NoLegend()
+
+```{r plot germ cells only}
+DimPlot(mo27testis_germ)
+DimPlot(mo27testis_i_germ)
+```
+
+```{r integrate 27 mo germ cells}
+germ.anchors <- FindIntegrationAnchors(object.list = list(mo27testis_germ, mo27testis_i_germ), dims = 1:15, verbose = F)
+mo27_germ <- IntegrateData(anchorset = germ.anchors, dims = 1:15, verbose = F)
+DefaultAssay(mo27_germ) <- "integrated"
+mo27_germ <- ScaleData(mo27_germ)
+mo27_germ <- RunPCA(mo27_germ, features = VariableFeatures(object = mo27_germ), verbose = F)
+mo27_germ <- FindNeighbors(mo27_germ, reduction = 'pca', dims = 1:20, verbose = F)
+mo27_germ <- FindClusters(mo27_germ, resolution = 0.5, verbose = F)
+mo27_germ <- RunUMAP(mo27_germ, reduction = 'pca', dims = 1:20, verbose = F)
+```
+
+```{r select somatic cells}
+soma_cells <- c("Sertoli & Leydig", "blood", "SMC-like", "macrophages", "lymphocytes", "leukocytes", "unknown immune")
+mo27testis_i_soma <- subset(mo27testis_i, (cell.type.cat %in% soma_cells))
+soma_cells <- c("somatic cells", "immune cells")
+mo27testis_soma <- subset(mo27testis, (cell.type.cat %in% soma_cells))
+```
+
+```{r integrate somatic cells}
+soma.anchors <- FindIntegrationAnchors(object.list = list(mo27testis_soma, mo27testis_i_soma), dims = 1:15, verbose = F)
+mo27_soma <- IntegrateData(anchorset = soma.anchors, dims = 1:15, verbose = F)
+DefaultAssay(mo27_soma) <- "integrated"
+mo27_soma <- ScaleData(mo27_soma)
+mo27_soma <- RunPCA(mo27_soma, features = VariableFeatures(object = mo27_soma), verbose = F)
+mo27_soma <- FindNeighbors(mo27_soma, reduction = 'pca', dims = 1:20, verbose = F)
+mo27_soma <- FindClusters(mo27_soma, resolution = 0.5, verbose = F)
+mo27_soma <- RunUMAP(mo27_soma, reduction = 'pca', dims = 1:20, verbose = F)
+```
+
+```{r UMAPs of 27 mo. germ}
+DimPlot(mo27_germ, label = T, group.by = 'seurat_clusters') + NoLegend()
+DimPlot(mo27_germ, label = T, group.by = 'age') + NoLegend()
+DimPlot(mo27_germ, label = T, group.by = 'cell.type') + NoLegend()
+DimPlot(mo27_germ, label = T, group.by = 'cell.type.cat') + NoLegend()
+FeaturePlot(mo27_germ, "rna_ddx4")
+FeaturePlot(mo27_germ, "rna_sycp3")
+FeaturePlot(mo27_germ, "rna_ccnb3")
+FeaturePlot(mo27_germ, "rna_tssk6")
+```
+
+```{r add cell.type information to 27 mo. germ}
+meta <- mo27_germ@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_type"] <- "spermatogonia (complete)"
+meta[meta$seurat_clusters == '1', "cell_type"] <- "spermatocytes"
+meta[meta$seurat_clusters == '2', "cell_type"] <- "spermatogonia (incomplete)"
+meta[meta$seurat_clusters == '3', "cell_type"] <- "spermatogonia (incomplete)"
+meta[meta$seurat_clusters == '4', "cell_type"] <- "spermatogonia (incomplete)"
+meta[meta$seurat_clusters == '5', "cell_type"] <- "spermatogonia (incomplete)"
+meta[meta$seurat_clusters == '6', "cell_type"] <- "spermatocytes"
+meta[meta$seurat_clusters == '7', "cell_type"] <- "spermatogonia (incomplete)"
+meta[meta$seurat_clusters == '8', "cell_type"] <- "spermatids"
+meta[meta$seurat_clusters == '9', "cell_type"] <- "spermatogonia (complete)"
+meta[meta$seurat_clusters == '10', "cell_type"] <- "spermatozoa"
+meta[meta$seurat_clusters == '11', "cell_type"] <- "spermatogonia (incomplete)"
+cell_types <- as.vector(meta$cell_type)
+mo27_germ <- AddMetaData(mo27_germ, cell_types, 'cell_type')
+```
+
+```{r UMAPs of 27 mo. soma}
+DimPlot(mo27_soma, label = T) + NoLegend()
+DimPlot(mo27_soma, label = T, group.by = 'cell.type') + NoLegend()
+DimPlot(mo27_soma, label = T, group.by = 'cell.type.cat') + NoLegend()
+FeaturePlot(mo27_soma)
+```
+
+```{r add cell.type information to 27 mo. soma}
+meta <- mo27_soma@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '1', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '2', "cell_type"] <- "macrophages"
+meta[meta$seurat_clusters == '3', "cell_type"] <- "macrophages"
+meta[meta$seurat_clusters == '4', "cell_type"] <- "macrophages"
+meta[meta$seurat_clusters == '5', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '6', "cell_type"] <- "blood"
+meta[meta$seurat_clusters == '7', "cell_type"] <- "SMC-like"
+meta[meta$seurat_clusters == '8', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '9', "cell_type"] <- "Sertoli & SMC-like"
+meta[meta$seurat_clusters == '10', "cell_type"] <- "epithelial cells"
+meta[meta$seurat_clusters == '11', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '12', "cell_type"] <- "Sertoli & Leydig"
+meta[meta$seurat_clusters == '13', "cell_type"] <- "leukocytes"
+meta[meta$seurat_clusters == '14', "cell_type"] <- "SMC-like"
+meta[meta$seurat_clusters == '15', "cell_type"] <- "neutrophils"
+meta[meta$seurat_clusters == '16', "cell_type"] <- "unknown"
+meta[meta$seurat_clusters == '17', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '18', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '19', "cell_type"] <- "lymphocytes"
+meta[meta$seurat_clusters == '20', "cell_type"] <- "lymphocytes"
+cell_types <- as.vector(meta$cell_type)
+mo27_soma <- AddMetaData(mo27_soma, cell_types, 'cell_type')
+```
+
+```{r UMAPs of combined 27 mo object}
+DimPlot(combined, label = T, group.by = 'seurat_clusters', repel = T) + NoLegend() + NoAxes()
+DimPlot(combined, label = T, group.by = 'cell.type.cat', repel = T) + NoLegend() + NoAxes()
+DimPlot(combined, label = T, group.by = 'seqID', repel = T) + NoLegend() + NoAxes()
+```
+
+```{r add cell.type information to combined 27 mo. object}
+meta <- combined@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_group"] <- "spermatogonia 1"
+meta[meta$seurat_clusters == '1', "cell_group"] <- "T cells & NK cells"
+meta[meta$seurat_clusters == '2', "cell_group"] <- "spermatocytes"
+meta[meta$seurat_clusters == '3', "cell_group"] <- "spermatocytes & spermatids 1"
+meta[meta$seurat_clusters == '4', "cell_group"] <- "macrophages 1"
+meta[meta$seurat_clusters == '5', "cell_group"] <- "spermatogonia 2"
+meta[meta$seurat_clusters == '6', "cell_group"] <- "macrophages 2"
+meta[meta$seurat_clusters == '7', "cell_group"] <- "T cells 2"
+meta[meta$seurat_clusters == '8', "cell_group"] <- "Treg"
+meta[meta$seurat_clusters == '9', "cell_group"] <- "spermatogonia, spermatocytes & spermatids"
+meta[meta$seurat_clusters == '10', "cell_group"] <- "blood"
+meta[meta$seurat_clusters == '11', "cell_group"] <- "Sertoli, Leydig, SMC-like"
+meta[meta$seurat_clusters == '12', "cell_group"] <- "spermatogonia 3"
+meta[meta$seurat_clusters == '13', "cell_group"] <- "macrophages 3"
+meta[meta$seurat_clusters == '14', "cell_group"] <- "spermatozoa"
+meta[meta$seurat_clusters == '15', "cell_group"] <- "B cells"
+meta[meta$seurat_clusters == '16', "cell_group"] <- "epithelial cells"
+meta[meta$seurat_clusters == '17', "cell_group"] <- "T cells and leukocytes"
+meta[meta$seurat_clusters == '18', "cell_group"] <- "T cells 3"
+meta[meta$seurat_clusters == '19', "cell_group"] <- "neutrophils"
+meta[meta$seurat_clusters == '20', "cell_group"] <- "unknown"
+cell_groups <- as.vector(meta$cell_group)
+combined <- AddMetaData(combined, cell_groups, 'cell.type')
+```
+
+```{r add label information to combined 27 mo. object}
+meta <- combined@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '1', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '2', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '3', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '4', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '5', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '6', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '7', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '8', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '9', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '10', "cell_group"] <- "blood"
+meta[meta$seurat_clusters == '11', "cell_group"] <- "Sertoli, Leydig, SMC-like"
+meta[meta$seurat_clusters == '12', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '13', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '14', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '15', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '16', "cell_group"] <- "epithelial cells"
+meta[meta$seurat_clusters == '17', "cell_group"] <- "leukocytes"
+meta[meta$seurat_clusters == '18', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '19', "cell_group"] <- "neutrophils"
+meta[meta$seurat_clusters == '20', "cell_group"] <- "unknown"
+cell_groups <- as.vector(meta$cell_group)
+combined <- AddMetaData(combined, cell_groups, 'cell.type.cat')
+```
+
+```{r fine tune cell.type.cat assignment}
+plot = DimPlot(combined)
+cells.located <- CellSelector(plot)
+cells <- combined[,colnames(combined) %in% cells.located]
+meta <- cells@meta.data
+meta$cell.id <- row.names(meta)
+leukocytes <- as.vector(meta$cell.id)
+meta <- combined@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '1', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '2', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '3', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '4', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '5', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '6', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '7', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '8', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '9', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '10', "cell_group"] <- "blood"
+meta[meta$seurat_clusters == '11', "cell_group"] <- "Sertoli, Leydig, SMC-like"
+meta[meta$seurat_clusters == '12', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '13', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '14', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '15', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '16', "cell_group"] <- "epithelial cells"
+meta[meta$seurat_clusters == '17', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '18', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '19', "cell_group"] <- "neutrophils"
+meta[meta$seurat_clusters == '20', "cell_group"] <- "unknown"
+meta[meta$cell.id %in% leukocytes, "cell_group"] <- "leukocytes"
+cell_groups <- as.vector(meta$cell_group)
+combined <- AddMetaData(combined, cell_groups, 'cell.type.cat')
+
+plot = DimPlot(combined)
+cells.located <- CellSelector(plot)
+cells <- combined[,colnames(combined) %in% cells.located]
+plot = DimPlot(cells)
+cells.located <- CellSelector(plot)
+macrophages <- cells[,colnames(cells) %in% cells.located]
+
+meta <- macrophages@meta.data
+meta$cell.id <- row.names(meta)
+macrophages <- as.vector(meta$cell.id)
+
+meta <- combined@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '1', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '2', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '3', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '4', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '5', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '6', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '7', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '8', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '9', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '10', "cell_group"] <- "blood"
+meta[meta$seurat_clusters == '11', "cell_group"] <- "Sertoli, Leydig, SMC-like"
+meta[meta$seurat_clusters == '12', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '13', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '14', "cell_group"] <- "germ cells"
+meta[meta$seurat_clusters == '15', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '16', "cell_group"] <- "epithelial cells"
+meta[meta$seurat_clusters == '17', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '18', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '19', "cell_group"] <- "neutrophils"
+meta[meta$seurat_clusters == '20', "cell_group"] <- "unknown"
+meta[meta$cell.id %in% leukocytes, "cell_group"] <- "leukocytes"
+meta[meta$cell.id %in% macrophages, "cell_group"] <- "macrophages"
+cell_groups <- as.vector(meta$cell_group)
+combined <- AddMetaData(combined, cell_groups, 'cell.type.cat')
+```
+
+```{r assign cell types categories to each cluster for 27 mo. incomplete}
+meta <- mo27testis_i@meta.data
+meta$cell.id <- row.names(meta)
+meta[meta$seurat_clusters == '0', "cell_group"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '1', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '2', "cell_group"] <- "pre-meiotic germ cells"
+meta[meta$seurat_clusters == '3', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '4', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '5', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '6', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '7', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '8', "cell_group"] <- "blood"
+meta[meta$seurat_clusters == '9', "cell_group"] <- "SMC-like"
+meta[meta$seurat_clusters == '10', "cell_group"] <- "macrophages"
+meta[meta$seurat_clusters == '11', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '12', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '13', "cell_group"] <- "leukocytes"
+meta[meta$seurat_clusters == '14', "cell_group"] <- "meiotic germ cells"
+meta[meta$seurat_clusters == '15', "cell_group"] <- "Sertoli & Leydig"
+meta[meta$seurat_clusters == '16', "cell_group"] <- "leukocytes"
+meta[meta$seurat_clusters == '17', "cell_group"] <- "lymphocytes"
+meta[meta$seurat_clusters == '18', "cell_group"] <- "unknown immune"
+meta[meta$seurat_clusters == '19', "cell_group"] <- "lymphocytes"
+cell_groups <- as.vector(meta$cell_group)
+mo27testis_i <- AddMetaData(mo27testis_i, cell_groups, 'cell.type.cat')
+```
+
+```{r save objects}
+saveRDS(mo27testis, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete.rds")
+saveRDS(mo27testis_i, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete.rds")
+saveRDS(combined, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27testis.rds")
+saveRDS(mo27_soma, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_soma.rds")
+saveRDS(mo27_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_germ.rds")
+```
+
+
+# Figure Panels
+```{r Figure 2C, fig.height=3, fig.width=5.7}
+combined$cell.type.cat <- factor(combined$cell.type.cat, levels = c("germ cells", "Sertoli, Leydig, SMC-like", "epithelial cells", "blood", "macrophages", "lymphocytes", "neutrophils", "leukocytes", "unknown"))
+palette <- c("#F8766D", "#CD9600", "#7CAE00", "#0Cb702", "#00A9FF", "#C77CFF", "#FF61CC", "#00BFC4", "darkorange")
+DimPlot(combined, group.by = 'cell.type.cat', label = T) + NoLegend() + NoAxes()
+DimPlot(combined, group.by = 'cell.type.cat', label = F, cols = palette, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure 2D, fig.height=3.3, fig.width=4}
+DimPlot(mo27_germ, group.by = 'sperm.status', cols = c("forestgreen", "lightgrey"), pt.size = 1.5, shuffle = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure 2E, fig.height=4.25, fig.width=5.5}
+DefaultAssay(mo27_germ) <- "RNA"
+FeaturePlot(mo27_germ, "ddx4", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+FeaturePlot(mo27_germ, "sycp3", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+FeaturePlot(mo27_germ, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+FeaturePlot(mo27_germ, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+```
+
+```{r Figure 2H}
+DefaultAssay(mo27_soma) <- "RNA"
+FeaturePlot(mo27_soma, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo27_soma, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo27_soma, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
+FeaturePlot(mo27_soma, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
+```
+
+```{r Figure 2G, fig.height=3.3, fig.width=4}
+DimPlot(mo27_soma, group.by = 'sperm.status', cols = c("forestgreen", "lightgrey"), pt.size = 1.5, shuffle = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure 2H, fig.height=4.25, fig.width=5.5}
+DefaultAssay(mo27_soma) <- "RNA"
+FeaturePlot(mo27_soma, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+FeaturePlot(mo27_soma, "star", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+FeaturePlot(mo27_soma, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+FeaturePlot(mo27_soma, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
+```
+
+```{r Figure S5A, fig.height=3.3, fig.width=4}
+DimPlot(mo27testis, group.by = 'cell.type', label = T, repel = T) + NoLegend() + NoAxes()
+DimPlot(mo27testis, group.by = 'cell.type', label = F, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure S5B, fig.height=3.3, fig.width=4}
+DimPlot(mo27testis_i, label = T, group.by = 'cell.type', repel = T) + NoLegend() + NoAxes()
+DimPlot(mo27testis_i, group.by = 'cell.type', label = F, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure S5C}
+DefaultAssay(mo27testis) <- "RNA"
+mo27testis$cell.type.cat <- factor(x = mo27testis$cell.type.cat, levels = c("pre-meiotic germ cells", "meiotic germ cells", "post-meiotic germ cells", "somatic cells", "immune cells"))
+VlnPlot(mo27testis, group.by = 'cell.type.cat', features = c("ddx4", "sycp3", "ccnb3", "tssk6", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
+mo27testis$cell.type <- factor(x = mo27testis$cell.type, levels = c("spermatogonia 1", "spermatogonia 2", "spermatogonia 3", "spermatogonia 4", "spermatocytes 1", "spermatocytes 2", "spermatocytes 3", "spermatids", "spermatozoa", "blood, Sertoli & Leydig", "immune cells", "unknown"))
+VlnPlot(mo27testis, group.by = 'cell.type', features = c("ddx4", "sycp3", "ccnb3", "tssk6", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
+```
+
+```{r Figure S5D}
+DefaultAssay(mo27testis_i) <- "RNA"
+mo27testis_i$cell.type.cat <- factor(x = mo27testis_i$cell.type.cat, levels = c("pre-meiotic germ cells", "meiotic germ cells", "Sertoli & Leydig", "blood", "SMC-like", "macrophages", "lymphocytes", "leukocytes", "unknown immune"))
+VlnPlot(mo27testis_i, group.by = 'cell.type.cat', features = c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
+mo27testis_i$cell.type <- factor(x = mo27testis_i$cell.type, levels = c("spermatogonia 1", "spermatogonia 2", "spermatocytes", "Sertoli & Leydig", "SMC-like", "blood", "macrophages 1", "macrophages 2", "macrophages 3", "T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "Treg", "NK cells", "B cells", "leukocytes", "neutrophils & epithelial cells", "unknown immune"))
+VlnPlot(mo27testis_i, group.by = 'cell.type', features = c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
+```
+
+```{r Figure S5E, fig.height=3.3, fig.width=4}
+mo27_germ$cell_type <- factor(x = mo27_germ$cell_type, levels = c("spermatogonia (incomplete)", "spermatogonia (complete)", "spermatocytes", "spermatids", "spermatozoa"))
+DimPlot(mo27_germ, group.by = 'cell_type', label = T, repel = T) + NoLegend() + NoAxes()
+DimPlot(mo27_germ, group.by = 'cell_type', pt.size = 1.5, label = F, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure S5F}
+DimPlot(mo27_soma, group.by = 'cell_type', label = T) + NoLegend() + NoAxes()
+DimPlot(mo27_soma, group.by = 'cell_type', label = F, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+```{r Figure S5G, fig.height=3.3, fig.width=4}
+DimPlot(combined, group.by = 'sperm.status', cols = c("forestgreen", "lightgrey"), pt.size = 1.5, shuffle = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+```{r Figure S5H, fig.height=3, fig.width=3}
+VlnPlot(combined, "percent.mt", group.by = 'sperm.status', pt.size = 0, cols = c("forestgreen", "lightgrey")) + NoLegend() + theme(axis.text.x = element_text(angle = 20)) + ggtitle(" ")
+VlnPlot(combined, "nFeature_RNA", group.by = 'sperm.status', pt.size = 0, cols = c("forestgreen", "lightgrey")) + NoLegend() + theme(axis.text.x = element_text(angle = 20)) + ggtitle(" ")
+VlnPlot(combined, "nCount_RNA", group.by = 'sperm.status', pt.size = 0, cols = c("forestgreen", "lightgrey")) + NoLegend() + theme(axis.text.x = element_text(angle = 20)) + ggtitle(" ")
 ```
