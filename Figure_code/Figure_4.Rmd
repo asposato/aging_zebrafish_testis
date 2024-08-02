@@ -1,5 +1,5 @@
 ---
-title: "germ cell atlas and pseudotime"
+title: "Figure 4"
 author: "Andy Sposato"
 output: pdf_document
 ---
@@ -11,358 +11,441 @@ library(viridis)
 library(ggplot2)
 library(tidyverse)
 library(scales)
-```
-
-```{r load fertile and infertile objects }
-fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
-infertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/infertile_atlas.rds")
-```
-
-```{r group cell types for germ bar graph for each age}
-fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
-# categorize cell types by germ vs. soma
-fertile$category <- 'germ'
-germ@meta.data$category[germ@meta.data$cell.type == 'Sertoli and blood'] <- 'soma'
-germ@meta.data$category[germ@meta.data$cell.type == 'Leydig'] <- 'soma'
-germ@meta.data$category[germ@meta.data$cell.type == 'immune cells'] <- 'soma'
-germ@meta.data$category[germ@meta.data$cell.type == 'liver'] <- 'soma'
-
-# subset for germ cells
-fertile_germ <- subset(fertile, subset = idents == 'germ')
-# categorize cell types into 5 germ cell categories
-meta <- fertile_germ@meta.data
-meta$cell.id <- row.names(meta)
-meta[meta$cell.type == 'spermatogonia 1', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatogonia 2', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatocytes 1', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'spermatocytes 2', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'spermatocytes 3', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'early round spermatids', "cell.category"] <- 'round spermatids'
-meta[meta$cell.type == 'middle round spermatids', "cell.category"] <- 'round spermatids'
-meta[meta$cell.type == 'late round spermatids', "cell.category"] <- 'round spermatids'
-meta[meta$cell.type == 'elongating spermatids', "cell.category"] <- 'elongating spermatids'
-meta[meta$cell.type == 'elongated spermatids', "cell.category"] <- 'elongating spermatids'
-meta[meta$cell.type == 'spermatozoa', "cell.category"] <- 'spermatozoa'
-cell.cat <- as.vector(meta$cell.category)
-fertile_germ <- AddMetaData(fertile_germ, cell.cat, "cell.category")
-
-
-meta <- fertile_germ@meta.data
-meta$cell.id <- row.names(meta)
-meta <- select(meta, c(cell.id, age, cell.type, cell.category))
-mo5_germ_meta <- subset(meta, meta$age == '5 mo.')
-yr1_germ_meta <- subset(meta, meta$age == '12 mo.')
-yr1.6_germ_meta <- subset(meta, meta$age == '20 mo.')
-yr1.8_germ_meta <- subset(meta, meta$age == '22 mo.')
-
-table(mo5_germ_meta$cell.category)
-table(yr1_germ_meta$cell.category)
-table(yr1.6_germ_meta$cell.category)
-table(yr1.8_germ_meta$cell.category)
-```
-
-```{r repeat for infertile data}
-meta <- old@meta.data
-meta$cell.id <- row.names(meta)
-meta[meta$cell.type == 'spermatogonia 1', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatogonia 2', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatocytes', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'vSMC', "cell.category"] <- 'vSMC'
-meta[meta$cell.type == 'blood', "cell.category"] <- 'blood'
-meta[meta$cell.type == 'macrophages 1', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'macrophages 2', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'macrophages 3', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'macrophages 4', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'leukocytes', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'neutrophils', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'Treg', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 1', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 2', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 3', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 4', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 5', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'NK cells', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'B cells', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'unknown immune', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'Sertoli & Leydig', "cell.category"] <- 'Sertoli'
-cell.cat <- as.vector(meta$cell.category)
-old <- AddMetaData(old, cell.cat, "cell.category")
-table(old@meta.data$cell.category)
-```
-
-```{r build data frame for germ counts}
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
-counts <- c(1873, 2887, 1458, 2365, 3657)
-percents <- counts/12650*100
-age <- c("5 mo.", "5 mo.", "5 mo.", "5 mo.","5 mo.")
-mo5_df <- data.frame(age, cell.cats, counts, percents)
-
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
-counts <- c(1518, 1790, 2874, 3280, 4316)
-percents <- counts/14084*100
-age <- c("12 mo.", "12 mo.", "12 mo.", "12 mo.","12 mo.")
-mo12_df <- data.frame(age, cell.cats, counts, percents)
-
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
-counts <- c(699, 504, 290, 324, 745)
-percents <- counts/2636*100
-age <- c("20 mo.", "20 mo.", "20 mo.", "20 mo.","20 mo.")
-mo20_df <- data.frame(age, cell.cats, counts, percents)
-
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
-counts <- c(850, 795, 469, 361, 649)
-percents <- counts/3289*100
-age <- c("22 mo.", "22 mo.", "22 mo.", "22 mo.","22 mo.")
-mo22_df <- data.frame(age, cell.cats, counts, percents)
-
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
-counts <- c(7521, 242, 0, 0, 0)
-percents <- counts/32659*100
-age <- c("27 mo.", "27 mo.", "27 mo.", "27 mo.","27 mo.")
-mo27_df <- data.frame(age, cell.cats, counts, percents)
-
-germ_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_df)
-germ_df$age <- factor(germ_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo."))
-```
-
-```{r Figure 4 panel A}
-ggplot(germ_df, aes(fill=age, x=factor(cell.cats, level=c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")), y=percents)) + 
-  geom_bar(position = 'dodge', stat = 'identity', color = 'black') + theme_classic() + 
-  ylab("normalized percent") + xlab("cell type") + theme(plot.title = element_text(hjust = 0.5, size = 12)) + theme(axis.text.x = element_text(angle = 0, vjust = 0, hjust=.5, size = 5)) + scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87')) + ggtitle("relative abundance of germ cell types across fertility")
-```
-
-# using URD to score fertile germ cell differentiation
-```{r load necessary packages, message=FALSE, warning=FALSE}
 suppressPackageStartupMessages(library(rgl))
-## Warning: package 'rgl' was built under R version 3.4.3
 suppressPackageStartupMessages(library(URD))
-## Warning: package 'Matrix' was built under R version 3.4.2
 knitr::opts_chunk$set(echo = TRUE)
 rgl::setupKnitr()
-library(RColorBrewer)
-library(scales)
 ```
 
-```{r load fertile object}
-# (generated with Figure_1.Rmd code)
-fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
+```{r SeuratV3ToURD.R}
+seuratV3ToURD <- function(seurat.object, reduction.copy = c("umap", "tsne"), assay.copy="RNA") {
+  if (requireNamespace("Seurat", quietly = TRUE)) {
+    # Create an empty URD object
+    ds <- new("URD")
+    
+    # Copy over data
+    ds@logupx.data <- as(as.matrix(seurat.object@assays[[assay.copy]]@data), "dgCMatrix")
+    if(!any(dim(seurat.object@assays[[assay.copy]]@counts) == 0)) ds@count.data <- as(as.matrix(seurat.object@assays[[assay.copy]]@counts[rownames(seurat.object@assays[[assay.copy]]@data), colnames(seurat.object@assays[[assay.copy]]@data)]), "dgCMatrix")
+    
+    # Copy over metadata
+    ## TO DO - grab kmeans clustering info
+    get.data <- NULL
+    if (.hasSlot(seurat.object, "data.info")) { 
+      get.data <- as.data.frame(seurat.object@assays[[assay.copy]]@data.info)
+    } else if (.hasSlot(seurat.object, "meta.data")) { 
+      get.data <- as.data.frame(seurat.object@meta.data) 
+    }
+    if(!is.null(get.data)) {
+      di <- colnames(get.data)
+      m <- grep("res|cluster|Res|Cluster", di, value=T, invert = T) # Put as metadata if it's not the result of a clustering.
+      discrete <- apply(get.data, 2, function(x) length(unique(x)) / length(x))
+      gi <- di[which(discrete <= 0.015)]
+      ds@meta <- get.data[,m,drop=F]
+      ds@group.ids <- get.data[,gi,drop=F]
+    }
+    
+    # Copy over var.genes
+    if(length(seurat.object@assays[[assay.copy]]@var.features > 0)) ds@var.genes <- seurat.object@assays[[assay.copy]]@var.features
+    
+    # Move over tSNE projection
+    if (.hasSlot(seurat.object, "tsne.rot")) {
+      if(!any(dim(seurat.object@tsne.rot) == 0)) {
+        ds@tsne.y <- as.data.frame(seurat.object@tsne.rot)
+        colnames(ds@tsne.y) <- c("tSNE1", "tSNE2")
+      }
+    } else if (.hasSlot(seurat.object, "reductions")) {
+      reduction.copy <- reduction.copy[which(reduction.copy %in% names(seurat.object@reductions))]
+      if (length(reduction.copy) > 0) {
+        reduction.copy.present <- names(which(sapply(reduction.copy, function(r) !any(dim(seurat.object@reductions[[r]]) == 0))))
+        if (length(reduction.copy.present) > 0)  {
+          reduction.copy.present <- reduction.copy.present[1]
+          ds@tsne.y <- as.data.frame(seurat.object@reductions[[reduction.copy.present]]@cell.embeddings)
+          colnames(ds@tsne.y) <- c("tSNE1", "tSNE2")
+        }
+      }
+    }
+    
+    # Move over PCA results
+    if (.hasSlot(seurat.object, "pca.x")) {
+      if(!any(dim(seurat.object@pca.x) == 0)) {
+        ds@pca.load <- seurat.object@pca.x
+        ds@pca.scores <- seurat.object@pca.rot
+        warning("Need to set which PCs are significant in @pca.sig")
+      }
+      ## TO DO: Convert SVD to sdev
+    } else if (.hasSlot(seurat.object, "reductions")) {
+      if(("pca" %in% names(seurat.object@reductions)) && !any(dim(Loadings(seurat.object, reduction = "pca")) == 0)) {
+        ds@pca.load <- as.data.frame(Loadings(seurat.object, reduction = "pca"))
+        ds@pca.scores <- as.data.frame(seurat.object@reductions$pca@cell.embeddings)
+        ds@pca.sdev <- seurat.object@reductions$pca@stdev
+        ds@pca.sig <- pcaMarchenkoPastur(M=dim(ds@pca.scores)[1], N=dim(ds@pca.load)[1], pca.sdev=ds@pca.sdev)
+      }
+    }
+    return(ds)
+  } else {
+    stop("Package Seurat is required for this function. To install: install.packages('Seurat')\n")
+  }
+}
 ```
 
-```{r select somatic cells to remove}
-plot <- DimPlot(fertile)
+```{r load objects}
+mo5 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo5.rds")
+mo12 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo12.rds")
+mo20 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo20.rds")
+mo22 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo22.rds")
+mo27_c <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete.rds")
+mo27_i <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete.rds")
+```
+
+```{r subset cells for first URD calculation}
+# these are complete germ cells and incomplete spermatocytes
+
+# mo5 
+plot <- DimPlot(mo5)
 # select cells to remove in new window
 cells.located <- CellSelector(plot = plot)
-# filter fertile atlas to remove the selected cells
-fertile_germ <- fertile[,!colnames(fertile) %in% cells.located]
+# filter mo5 atlas to remove the selected cells (somatic)
+mo5_germ <- mo5[,!colnames(mo5) %in% cells.located]
+DimPlot(mo5_germ)
+saveRDS(mo5_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo5_germ.rds")
+
+# mo12
+plot <- DimPlot(mo12)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo12_germ <- mo12[,!colnames(mo12) %in% cells.located]
+DimPlot(mo12_germ)
+saveRDS(mo12_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo12_germ.rds")
+
+# mo20
+plot <- DimPlot(mo20)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo20_germ <- mo20[,!colnames(mo20) %in% cells.located]
+DimPlot(mo20_germ)
+saveRDS(mo20_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo20_germ.rds")
+
+# mo22
+plot <- DimPlot(mo22)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo22_germ <- mo22[,!colnames(mo22) %in% cells.located]
+plot <- DimPlot(mo22_germ)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo22_germ <- mo22_germ[,!colnames(mo22_germ) %in% cells.located]
+DimPlot(mo22_germ)
+saveRDS(mo22_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo22_germ.rds")
+
+# mo27
+# subsetted previously in Figure_2
+mo27_complete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete_germ_subset.rds")
+
+mo27_incomplete_spermatocytes <- subset(mo27testis_i, idents = "14")
+saveRDS(mo27_incomplete_spermatocytes, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_incomplete_spermatocytes.rds")
 ```
 
-```{r convert fertile Seurat object to URD object}
-# conversion code written by Jeff Farrell
+```{r integrate cells for first URD calculation}
+mo5 <- readRDS("mo5_germ.rds")
+mo12 <- readRDS("mo12_germ.rds")
+mo20 <- readRDS("mo20_germ.rds")
+mo22 <- readRDS("mo22_germ.rds")
+mo27 <- readRDS("mo27complete_germ.rds")
+mo27_v2 <- readRDS("mo27_incomplete_spermatocytes.rds")
+
+mo5 <- ScaleData(mo5_germ)
+mo12 <- ScaleData(mo12_germ)
+mo20 <- ScaleData(mo20_germ)
+mo22 <- ScaleData(mo22_germ)
+mo27 <- ScaleData(mo27complete_germ)
+mo27_v2 <- ScaleData(mo27_incomplete_spermatocytes)
+mo5 <- FindVariableFeatures(mo5_germ)
+mo12 <- FindVariableFeatures(mo12_germ)
+mo20 <- FindVariableFeatures(mo20_germ)
+mo22 <- FindVariableFeatures(mo22_germ)
+mo27 <- FindVariableFeatures(mo27complete_germ)
+mo27_v2 <- FindVariableFeatures(mo27_incomplete_spermatocytes)
+mo5 <- RunPCA(mo5_germ)
+mo12 <- RunPCA(mo12_germ)
+mo20 <- RunPCA(mo20_germ)
+mo22 <- RunPCA(mo22_germ)
+mo27 <- RunPCA(mo27complete_germ)
+mo27_v2 <- RunPCA(mo27_incomplete_spermatocytes)
+
+germ.anchors <- FindIntegrationAnchors(object.list = list(mo5_germ, mo12_germ, mo20_germ, mo22_germ, mo27complete_germ, mo27_incomplete_spermatocytes), reduction = 'cca', dims = 1:20, scale = F)
+germ <- IntegrateData(anchorset = germ.anchors, dims = 1:20)
+
+DefaultAssay(germ) <- "integrated"
+germ <- FindVariableFeatures(germ)
+germ <- ScaleData(germ)
+germ <- RunPCA(germ, features  = VariableFeatures(object = germ))
+
+germ <- FindNeighbors(germ, dims = 1:15, verbose = FALSE)
+germ <- FindClusters(germ, verbose = FALSE)
+germ <- RunUMAP(germ, dims = 1:15, verbose = FALSE, assay = 'RNA')
+
+saveRDS(germ, "integrated_complete_germ_incomplete_spermatocytes.rds")
+```
+
+```{r run first URD calculation}
+adult <- readRDS("integrated_complete_germ_incomplete_spermatocytes.rds")
+
 source("SeuratV3ToURD.R")
-fertile_germ_URD <- seuratV3ToURD(fertile_germ)
+adult_URD <- seuratV3ToURD(adult)
+
+clusters <- as.factor(adult_URD@group.ids$seurat_clusters)
+adult_URD@meta$seurat_clusters <- clusters
+
+var.genes <- findVariableGenes(adult_URD, set.object.var.genes=F, diffCV.cutoff=0.3, mean.min=.005, mean.max=100, main.use="", do.plot = T)
+adult_URD@var.genes <- var.genes
+
+adult_URD <- calcDM(adult_URD, knn = 210)
+
+root.cells <- cellsInCluster(adult_URD, "seurat_clusters", c("7", "9", "13"))
+adult_URD.floods <- floodPseudotime(adult_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
+
+adult_URD <- floodPseudotimeProcess(adult_URD, adult_URD.floods, floods.name="pseudotime.fwd")
+
+root.cells <- cellsInCluster(adult_URD, "seurat_clusters", "5")
+
+adult_URD.floods <- floodPseudotime(adult_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
+
+adult_URD <- floodPseudotimeProcess(adult_URD, adult_URD.floods, floods.name="pseudotime.rev")
+
+adult_URD@pseudotime$pseudotime.fwd.norm <- adult_URD@pseudotime$pseudotime.fwd/max(adult_URD@pseudotime$pseudotime.fwd)
+adult_URD@pseudotime$pseudotime.rev.norm <- 1 - (adult_URD@pseudotime$pseudotime.rev/max(adult_URD@pseudotime$pseudotime.rev))
+adult_URD@pseudotime$pseudotime <- rowMeans(adult_URD@pseudotime[,c("pseudotime.rev.norm", "pseudotime.fwd.norm")])
+
+saveRDS(adult_URD, "complete_germ_incomplete_spermatocytes_URD.rds")
 ```
 
-```{r SeuratV3ToURD}
-# seuratV3ToURD <- function(seurat.object, reduction.copy = c("umap", "tsne"), assay.copy="RNA") {
-#   if (requireNamespace("Seurat", quietly = TRUE)) {
-#     # Create an empty URD object
-#     ds <- new("URD")
-#     
-#     # Copy over data
-#     ds@logupx.data <- as(as.matrix(seurat.object@assays[[assay.copy]]@data), "dgCMatrix")
-#     if(!any(dim(seurat.object@assays[[assay.copy]]@counts) == 0)) ds@count.data <- as(as.matrix(seurat.object@assays[[assay.copy]]@counts[rownames(seurat.object@assays[[assay.copy]]@data), colnames(seurat.object@assays[[assay.copy]]@data)]), "dgCMatrix")
-#     
-#     # Copy over metadata
-#     ## TO DO - grab kmeans clustering info
-#     get.data <- NULL
-#     if (.hasSlot(seurat.object, "data.info")) { 
-#       get.data <- as.data.frame(seurat.object@assays[[assay.copy]]@data.info)
-#     } else if (.hasSlot(seurat.object, "meta.data")) { 
-#       get.data <- as.data.frame(seurat.object@meta.data) 
-#     }
-#     if(!is.null(get.data)) {
-#       di <- colnames(get.data)
-#       m <- grep("res|cluster|Res|Cluster", di, value=T, invert = T) # Put as metadata if it's not the result of a clustering.
-#       discrete <- apply(get.data, 2, function(x) length(unique(x)) / length(x))
-#       gi <- di[which(discrete <= 0.015)]
-#       ds@meta <- get.data[,m,drop=F]
-#       ds@group.ids <- get.data[,gi,drop=F]
-#     }
-#     
-#     # Copy over var.genes
-#     if(length(seurat.object@assays[[assay.copy]]@var.features > 0)) ds@var.genes <- seurat.object@assays[[assay.copy]]@var.features
-#     
-#     # Move over tSNE projection
-#     if (.hasSlot(seurat.object, "tsne.rot")) {
-#       if(!any(dim(seurat.object@tsne.rot) == 0)) {
-#         ds@tsne.y <- as.data.frame(seurat.object@tsne.rot)
-#         colnames(ds@tsne.y) <- c("tSNE1", "tSNE2")
-#       }
-#     } else if (.hasSlot(seurat.object, "reductions")) {
-#       reduction.copy <- reduction.copy[which(reduction.copy %in% names(seurat.object@reductions))]
-#       if (length(reduction.copy) > 0) {
-#         reduction.copy.present <- names(which(sapply(reduction.copy, function(r) !any(dim(seurat.object@reductions[[r]]) == 0))))
-#         if (length(reduction.copy.present) > 0)  {
-#           reduction.copy.present <- reduction.copy.present[1]
-#           ds@tsne.y <- as.data.frame(seurat.object@reductions[[reduction.copy.present]]@cell.embeddings)
-#           colnames(ds@tsne.y) <- c("tSNE1", "tSNE2")
-#         }
-#       }
-#     }
-#     
-#     # Move over PCA results
-#     if (.hasSlot(seurat.object, "pca.x")) {
-#       if(!any(dim(seurat.object@pca.x) == 0)) {
-#         ds@pca.load <- seurat.object@pca.x
-#         ds@pca.scores <- seurat.object@pca.rot
-#         warning("Need to set which PCs are significant in @pca.sig")
-#       }
-#       ## TO DO: Convert SVD to sdev
-#     } else if (.hasSlot(seurat.object, "reductions")) {
-#       if(("pca" %in% names(seurat.object@reductions)) && !any(dim(Loadings(seurat.object, reduction = "pca")) == 0)) {
-#         ds@pca.load <- as.data.frame(Loadings(seurat.object, reduction = "pca"))
-#         ds@pca.scores <- as.data.frame(seurat.object@reductions$pca@cell.embeddings)
-#         ds@pca.sdev <- seurat.object@reductions$pca@stdev
-#         ds@pca.sig <- pcaMarchenkoPastur(M=dim(ds@pca.scores)[1], N=dim(ds@pca.load)[1], pca.sdev=ds@pca.sdev)
-#       }
-#     }
-#     return(ds)
-#   } else {
-#     stop("Package Seurat is required for this function. To install: install.packages('Seurat')\n")
-#   }
-# }
+```{r load objects for first calculation}
+complete_germ_incomplete_spermatocytes <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/integrated_complete_germ_incomplete_spermatocytes.rds")
+complete_germ_incomplete_spermatocytes_URD <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_incomplete_spermatocytes_URD.rds")
 ```
 
-```{r convert fertile Seurat object to URD object}
-# conversion code written by Jeff Farrell
+```{r add differentiation score to first object}
+complete_germ_incomplete_spermatocytes_URD@pseudotime$pseudotime.scaled <- rescale(complete_germ_incomplete_spermatocytes_URD@pseudotime$pseudotime, to = c(0,1))
+diffs <- as.vector(complete_germ_incomplete_spermatocytes_URD@pseudotime$pseudotime.scaled)
+complete_germ_incomplete_spermatocytes <- AddMetaData(object2, diffs, "pseudotime")
+saveRDS(complete_germ_incomplete_spermatocytes, "/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_incomplete_spermatocytes_URD_pseudotime_scaled.rds")
+```
+
+```{r plot differentiation score for first object}
+complete_germ_incomplete_spermatocytes_URD <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_incomplete_spermatocytes_URD.rds")
+plotDim(complete_germ_incomplete_spermatocytes, "pseudotime.scaled")
+```
+
+```{r subset and recluster cells for second URD object}
+# these are incomplete germ cells only
+#mo27testis_i <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/")
+#mo27testis_i_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/")
+DimPlot(mo27testis_i, label = T)
+DimPlot(mo27testis_i_germ, label = T)
+
+mo27_testis_i_germ_reclustered <- NormalizeData(mo27testis_i_germ)
+mo27_testis_i_germ_reclustered <- FindVariableFeatures(mo27_testis_i_germ_reclustered)
+mo27_testis_i_germ_reclustered <- ScaleData(mo27_testis_i_germ_reclustered)
+mo27_testis_i_germ_reclustered <- RunPCA(mo27_testis_i_germ_reclustered)
+mo27_testis_i_germ_reclustered <- RunUMAP(mo27_testis_i_germ_reclustered, reduction = 'pca', dims = 1:10)
+mo27_testis_i_germ_reclustered <- FindNeighbors(mo27_testis_i_germ_reclustered, reduction = 'pca', dims = 1:10)
+mo27_testis_i_germ_reclustered <- FindClusters(mo27_testis_i_germ_reclustered, resolution = 0.5)
+
+saveRDS(mo27_testis_i_germ_reclustered, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ.rds")
+```
+
+```{r run second URD calculation}
+adult <- readRDS("mo27incomplete_germ.rds")
+
 source("SeuratV3ToURD.R")
-fertile_germ_URD <- seuratV3ToURD(fertile_germ)
+adult_URD <- seuratV3ToURD(adult)
+
+clusters <- as.factor(adult_URD@group.ids$seurat_clusters)
+adult_URD@meta$seurat_clusters <- clusters
+
+var.genes <- findVariableGenes(adult_URD, set.object.var.genes=F, diffCV.cutoff=0.3, mean.min=.005, mean.max=100, main.use="", do.plot = T)
+adult_URD@var.genes <- var.genes
+
+adult_URD <- calcDM(adult_URD, knn = 88)
+
+root.cells <- cellsInCluster(adult_URD, "seurat_clusters", c("5", "9"))
+adult_URD.floods <- floodPseudotime(adult_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
+
+adult_URD <- floodPseudotimeProcess(adult_URD, adult_URD.floods, floods.name="pseudotime.fwd")
+
+root.cells <- cellsInCluster(adult_URD, "seurat_clusters", "7")
+
+adult_URD.floods <- floodPseudotime(adult_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
+
+adult_URD <- floodPseudotimeProcess(adult_URD, adult_URD.floods, floods.name="pseudotime.rev")
+
+adult_URD@pseudotime$pseudotime.fwd.norm <- adult_URD@pseudotime$pseudotime.fwd/max(adult_URD@pseudotime$pseudotime.fwd)
+adult_URD@pseudotime$pseudotime.rev.norm <- 1 - (adult_URD@pseudotime$pseudotime.rev/max(adult_URD@pseudotime$pseudotime.rev))
+adult_URD@pseudotime$pseudotime <- rowMeans(adult_URD@pseudotime[,c("pseudotime.rev.norm", "pseudotime.fwd.norm")])
+
+saveRDS(adult_URD, "mo27incomplete_germ_URD.rds")
 ```
 
-```{r SeuratV3ToURD}
-# seuratV3ToURD <- function(seurat.object, reduction.copy = c("umap", "tsne"), assay.copy="RNA") {
-#   if (requireNamespace("Seurat", quietly = TRUE)) {
-#     # Create an empty URD object
-#     ds <- new("URD")
-#     
-#     # Copy over data
-#     ds@logupx.data <- as(as.matrix(seurat.object@assays[[assay.copy]]@data), "dgCMatrix")
-#     if(!any(dim(seurat.object@assays[[assay.copy]]@counts) == 0)) ds@count.data <- as(as.matrix(seurat.object@assays[[assay.copy]]@counts[rownames(seurat.object@assays[[assay.copy]]@data), colnames(seurat.object@assays[[assay.copy]]@data)]), "dgCMatrix")
-#     
-#     # Copy over metadata
-#     ## TO DO - grab kmeans clustering info
-#     get.data <- NULL
-#     if (.hasSlot(seurat.object, "data.info")) { 
-#       get.data <- as.data.frame(seurat.object@assays[[assay.copy]]@data.info)
-#     } else if (.hasSlot(seurat.object, "meta.data")) { 
-#       get.data <- as.data.frame(seurat.object@meta.data) 
-#     }
-#     if(!is.null(get.data)) {
-#       di <- colnames(get.data)
-#       m <- grep("res|cluster|Res|Cluster", di, value=T, invert = T) # Put as metadata if it's not the result of a clustering.
-#       discrete <- apply(get.data, 2, function(x) length(unique(x)) / length(x))
-#       gi <- di[which(discrete <= 0.015)]
-#       ds@meta <- get.data[,m,drop=F]
-#       ds@group.ids <- get.data[,gi,drop=F]
-#     }
-#     
-#     # Copy over var.genes
-#     if(length(seurat.object@assays[[assay.copy]]@var.features > 0)) ds@var.genes <- seurat.object@assays[[assay.copy]]@var.features
-#     
-#     # Move over tSNE projection
-#     if (.hasSlot(seurat.object, "tsne.rot")) {
-#       if(!any(dim(seurat.object@tsne.rot) == 0)) {
-#         ds@tsne.y <- as.data.frame(seurat.object@tsne.rot)
-#         colnames(ds@tsne.y) <- c("tSNE1", "tSNE2")
-#       }
-#     } else if (.hasSlot(seurat.object, "reductions")) {
-#       reduction.copy <- reduction.copy[which(reduction.copy %in% names(seurat.object@reductions))]
-#       if (length(reduction.copy) > 0) {
-#         reduction.copy.present <- names(which(sapply(reduction.copy, function(r) !any(dim(seurat.object@reductions[[r]]) == 0))))
-#         if (length(reduction.copy.present) > 0)  {
-#           reduction.copy.present <- reduction.copy.present[1]
-#           ds@tsne.y <- as.data.frame(seurat.object@reductions[[reduction.copy.present]]@cell.embeddings)
-#           colnames(ds@tsne.y) <- c("tSNE1", "tSNE2")
-#         }
-#       }
-#     }
-#     
-#     # Move over PCA results
-#     if (.hasSlot(seurat.object, "pca.x")) {
-#       if(!any(dim(seurat.object@pca.x) == 0)) {
-#         ds@pca.load <- seurat.object@pca.x
-#         ds@pca.scores <- seurat.object@pca.rot
-#         warning("Need to set which PCs are significant in @pca.sig")
-#       }
-#       ## TO DO: Convert SVD to sdev
-#     } else if (.hasSlot(seurat.object, "reductions")) {
-#       if(("pca" %in% names(seurat.object@reductions)) && !any(dim(Loadings(seurat.object, reduction = "pca")) == 0)) {
-#         ds@pca.load <- as.data.frame(Loadings(seurat.object, reduction = "pca"))
-#         ds@pca.scores <- as.data.frame(seurat.object@reductions$pca@cell.embeddings)
-#         ds@pca.sdev <- seurat.object@reductions$pca@stdev
-#         ds@pca.sig <- pcaMarchenkoPastur(M=dim(ds@pca.scores)[1], N=dim(ds@pca.load)[1], pca.sdev=ds@pca.sdev)
-#       }
-#     }
-#     return(ds)
-#   } else {
-#     stop("Package Seurat is required for this function. To install: install.packages('Seurat')\n")
-#   }
-# }
+```{r load objects for second calculation}
+mo27_incomplete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ.rds")
+mo27_incomplete_germ_URD <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_URD.rds")
 ```
 
-```{r run URD from spermatogonia to spermatozoa}
-clusters <- as.factor(fertile_germ_URD@group.ids$seurat_clusters)
-fertile_germ_URD@meta$seurat_clusters <- clusters
-var.genes <- findVariableGenes(fertile_germ_URD, set.object.var.genes=F, diffCV.cutoff=0.3, mean.min=.005, mean.max=100, main.use="", do.plot = T)
-fertile_germ_URD@var.genes <- var.genes
-# knn = sqrt(total number of cells)
-fertile_germ_URD <- calcDM(fertile_germ_URD, knn = 178)
-root.cells <- cellsInCluster(fertile_germ_URD, "seurat_clusters", c("5"))
-fertile_germ_URD.floods <- floodPseudotime(fertile_germ_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
-# store scores as pseudotime.fwd
-fertile_germ_URD <- floodPseudotimeProcess(fertile_germ_URD, fertile_germ_URD.floods, floods.name="pseudotime.fwd")
+```{r add differentiation score to second object}
+# these scores should be calibrated according to the 27 mo. incomplete scores in the first object
+complete_germ_incomplete_spermatocytes <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/integrated_complete_germ_incomplete_spermatocytes_w_pseudotime.rds")
+meta <- complete_germ_incomplete_spermatocytes@meta.data
+meta$cell.id <- row.names(meta)
+mo27_incomplete <- subset(meta, age == '27 mo.')
+mo27_incomplete_scores <- as.vector(mo27_incomplete$pseudotime)
+mo27_incomplete_scores_sorted <- sort(mo27_incomplete_scores)
+min(mo27_incomplete_scores_sorted)
+# 0.06701982
+max(mo27_incomplete_scores_sorted)
+# 0.34559050
+
+mo27_incomplete_germ_URD@pseudotime$pseudotime.scaled <- rescale(mo27_incomplete_germ_URD@pseudotime$pseudotime, to = c(0.06701982,0.3455905))
+diffs <- as.vector(mo27_incomplete_germ_URD@pseudotime$pseudotime.scaled)
+mo27_incomplete_germ <- AddMetaData(mo27_incomplete_germ, diffs, "pseudotime")
+saveRDS(mo27_incomplete_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_w_pseudotime.rds")
 ```
 
-```{r run URD from spermatozoa to spermatogonia}
-root.cells <- cellsInCluster(fertile_germ_URD, "seurat_clusters", "1")
-fertile_germ_URD.floods <- floodPseudotime(fertile_germ_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
-# store scores as pseudotime.rev
-fertile_germ_URD <- floodPseudotimeProcess(fertile_germ_URD, fertile_germ_URD.floods, floods.name="pseudotime.rev")
+```{r mo27 incomplete URD}
+plotDim(mo27_incomplete_germ_URD, "pseudotime.scaled", point.size = 1.5, colors = c("#0000FF", "#002DF8", "#004EF9", "#0A74F9", "#0D8EFA", "#12B5FB", "#16DAFD", "#26F7EA", "#52FAB8", "#F7F53A")) + ggtitle(" ") + NoLegend() + NoAxes()
 ```
 
-```{r normalize pseudotime scores and average for a single pseudotime score}
-fertile_germ_URD@pseudotime$pseudotime.fwd.norm <- fertile_germ_URD@pseudotime$pseudotime.fwd/max(fertile_germ_URD@pseudotime$pseudotime.fwd)
-fertile_germ_URD@pseudotime$pseudotime.rev.norm <- 1 - (fertile_germ_URD@pseudotime$pseudotime.rev/max(fertile_germ_URD@pseudotime$pseudotime.rev))
-fertile_germ_URD@pseudotime$pseudotime <- rowMeans(fertile_germ_URD@pseudotime[,c("pseudotime.rev.norm", "pseudotime.fwd.norm")])
+```{r plot differentiation score for second object}
+mo27_incomplete_germ_URD_pseudotime_scaled <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_URD_pseudotime_scaled.rds")
+plotDim(mo27_incomplete_germ_URD_pseudotime_scaled, "pseudotime.scaled")
 ```
 
-```{r}
-plotDim(fertile_germ_URD, "pseudotime")
+```{r subset cells for third URD calculation}
+# these are complete germ cells and incomplete spermatocytes
+
+# mo5 
+plot <- DimPlot(mo5)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo5 atlas to remove the selected cells (somatic)
+mo5_germ <- mo5[,!colnames(mo5) %in% cells.located]
+DimPlot(mo5_germ)
+saveRDS(mo5_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo5_germ.rds")
+
+# mo12
+plot <- DimPlot(mo12)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo12_germ <- mo12[,!colnames(mo12) %in% cells.located]
+DimPlot(mo12_germ)
+saveRDS(mo12_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo12_germ.rds")
+
+# mo20
+plot <- DimPlot(mo20)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo20_germ <- mo20[,!colnames(mo20) %in% cells.located]
+DimPlot(mo20_germ)
+saveRDS(mo20_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo20_germ.rds")
+
+# mo22
+plot <- DimPlot(mo22)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo22_germ <- mo22[,!colnames(mo22) %in% cells.located]
+plot <- DimPlot(mo22_germ)
+# select cells to remove in new window
+cells.located <- CellSelector(plot = plot)
+# filter mo12 atlas to remove the selected cells (somatic)
+mo22_germ <- mo22_germ[,!colnames(mo22_germ) %in% cells.located]
+DimPlot(mo22_germ)
+saveRDS(mo22_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo22_germ.rds")
+
+# mo27
+# subsetted previously in Figure_2
+mo27_complete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete_germ_subset.rds")
 ```
 
-```{r save URD object}
-saveRDS(fertile_germ_URD, "/Volumes/LaCie/seurat_objects/fertile_germ_URD.rds")
+```{r integrate cells for third URD calculation}
+germ.anchors <- FindIntegrationAnchors(object.list = list(mo5_germ, mo12_germ, mo20_germ, mo22_germ, mo27complete_germ), reduction = 'cca', dims = 1:20, scale = F)
+germ <- IntegrateData(anchorset = germ.anchors, dims = 1:20)
+
+DefaultAssay(germ) <- "integrated"
+germ <- FindVariableFeatures(germ)
+germ <- ScaleData(germ)
+germ <- RunPCA(germ, features  = VariableFeatures(object = germ))
+
+germ <- FindNeighbors(germ, dims = 1:15, verbose = FALSE)
+germ <- FindClusters(germ, verbose = FALSE)
+germ <- RunUMAP(germ, dims = 1:15, verbose = FALSE, assay = 'RNA')
+
+saveRDS(germ, "integrated_complete_germ.rds")
 ```
 
-```{r load fertile germ URD object}
-fertile_germ_URD <- readRDS('/Volumes/LaCie/seurat_objects/all_fertile/all_fertile_germ_URD_May30.rds')
+```{r run third URD calculation}
+adult <- readRDS("integrated_complete_germ.rds")
+
+source("SeuratV3ToURD.R")
+adult_URD <- seuratV3ToURD(adult)
+
+clusters <- as.factor(adult_URD@group.ids$seurat_clusters)
+adult_URD@meta$seurat_clusters <- clusters
+
+var.genes <- findVariableGenes(adult_URD, set.object.var.genes=F, diffCV.cutoff=0.3, mean.min=.005, mean.max=100, main.use="", do.plot = T)
+adult_URD@var.genes <- var.genes
+
+adult_URD <- calcDM(adult_URD, knn = 209)
+
+root.cells <- cellsInCluster(adult_URD, "seurat_clusters", c("4", "12, "11"))
+adult_URD.floods <- floodPseudotime(adult_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
+
+adult_URD <- floodPseudotimeProcess(adult_URD, adult_URD.floods, floods.name="pseudotime.fwd")
+
+root.cells <- cellsInCluster(adult_URD, "seurat_clusters", "8")
+
+adult_URD.floods <- floodPseudotime(adult_URD, root.cells = root.cells, n=20, minimum.cells.flooded = 2, verbose=F)
+
+adult_URD <- floodPseudotimeProcess(adult_URD, adult_URD.floods, floods.name="pseudotime.rev")
+
+adult_URD@pseudotime$pseudotime.fwd.norm <- adult_URD@pseudotime$pseudotime.fwd/max(adult_URD@pseudotime$pseudotime.fwd)
+adult_URD@pseudotime$pseudotime.rev.norm <- 1 - (adult_URD@pseudotime$pseudotime.rev/max(adult_URD@pseudotime$pseudotime.rev))
+adult_URD@pseudotime$pseudotime <- rowMeans(adult_URD@pseudotime[,c("pseudotime.rev.norm", "pseudotime.fwd.norm")])
+
+saveRDS(adult_URD, "complete_germ_URD.rds")
 ```
 
-```{r add pseudotime scores to Seurat object}
-# scale pseudotime scores on a 0-1 spectrum
-fertile_germ_URD@pseudotime$pseudotime.scaled <- rescale(fertile_germ_URD@pseudotime$pseudotime, to = c(0,1))
-diffs <- as.vector(fertile_germ_URD@pseudotime$pseudotime.scaled)
-all_fertile_germ <- AddMetaData(all_fertile_germ, diffs, "pseudotime")
+```{r load objects for third calculation}
+complete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/integrated_complete_germ.rds")
+complete_germ_URD <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_URD.rds")
 ```
 
-```{r load fertile germ atlas}
-# somatic cell groups have been removed from this atlas
-all_fertile_germ <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile_somatic_removed.rds")
+```{r add differentiation score to third object}
+complete_germ_URD@pseudotime$pseudotime.scaled <- rescale(complete_germ_URD@pseudotime$pseudotime, to = c(0,1))
+diffs <- as.vector(complete_germ_URD@pseudotime$pseudotime.scaled)
+complete_germ <- AddMetaData(complete_germ, diffs, "pseudotime")
+saveRDS(complete_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_w_pseudotime.rds")
+saveRDS(complete_germ_URD, "/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_URD_pseudotime_scaled.rds")
+```
+
+```{r plot differentiation score for first object}
+complete_germ_URD <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_URD_pseudotime_scaled.rds") 
+plotDim(complete_germ_URD, "pseudotime.scaled", point.size=1.5) + ggtitle(" ") + NoAxes()
+```
+
+```{r load objects for pseudotime graph}
+germ <- readRDS('/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_w_pseudotime.rds')
+incomplete_germ <- readRDS('/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_w_pseudotime.rds')
 ```
 
 ```{r sort 5 month cells into 20 bins across the pseudotime spectrum}
 # 5 mo. fish 1
-mo5_A <- subset(all_fertile_germ, sub.sample == '5mo_A')
+mo5_A <- subset(germ, sub.sample == '5mo_A')
 meta <- mo5_A@meta.data
 meta$cell.id <- row.names(meta)
 mo5_A_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
@@ -432,7 +515,7 @@ ggplot(data=mo5_A_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )
 ggplot(data=mo5_A_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 15, color = 'red') + geom_path(size = 0.5, color = 'red', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("5 month A testis pseudotime graph")
 
 # 5 mo. fish 2
-mo5_B <- subset(all_fertile_germ, sub.sample == '5mo_B')
+mo5_B <- subset(germ, sub.sample == '5mo_B')
 meta <- mo5_B@meta.data
 meta$cell.id <- row.names(meta)
 mo5_B_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
@@ -508,8 +591,22 @@ mo5_B_0.05,mo5_B_0.1,mo5_B_0.15,mo5_B_0.2,mo5_B_0.25,mo5_B_0.3,mo5_B_0.35,mo5_B_
 rm(mo5_A, mo5_B)
 ```
 
+```{r average cell percents across both 5 mo dataframes}
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_percents <-rowMeans(cbind(mo5_A_df$cell_percents,mo5_B_df$cell_percents))
+age <- c('mo5','mo5','mo5','mo5','mo5',
+         'mo5','mo5','mo5','mo5','mo5', 
+         'mo5','mo5','mo5','mo5','mo5',
+         'mo5','mo5','mo5','mo5','mo5')
+
+mo5_df <- data.frame(pseudotime_scores, cell_percents, age)
+
+ggplot(data=mo5_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 15, color = 'red') + geom_path(size = 0.5, color = 'red', group = 1, linetype = 'solid') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("5 month testis pseudotime graph")
+```
+
 ```{r repeat for 12 mo. fish}
-yr1_A <- subset(all_fertile_germ, sub.sample == 'yr1_A')
+yr1_A <- subset(germ, sub.sample == '12mo_A')
 meta <- yr1_A@meta.data
 meta$cell.id <- row.names(meta)
 yr1_A_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
@@ -574,11 +671,11 @@ age <- c('yr1_A','yr1_A','yr1_A','yr1_A','yr1_A',
 
 yr1_A_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
 
-ggplot(data=yr1_A_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1 yr A testis pseudotime graph")
+ggplot(data=yr1_A_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("12 mo A testis pseudotime graph")
 
-ggplot(data=yr1_A_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1 yr A testis pseudotime graph")
+ggplot(data=yr1_A_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("12 mo A testis pseudotime graph")
 
-yr1_B <- subset(all_fertile_germ, sub.sample == 'yr1_B')
+yr1_B <- subset(germ, sub.sample == '12mo_B')
 meta <- yr1_B@meta.data
 meta$cell.id <- row.names(meta)
 yr1_B_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
@@ -645,17 +742,31 @@ yr1_B_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
 
 yr1_B_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
 
-ggplot(data=yr1_B_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1 yr B testis pseudotime graph")
+ggplot(data=yr1_B_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("12 mo B testis pseudotime graph")
 
-ggplot(data=yr1_B_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1 yr B testis pseudotime graph")
+ggplot(data=yr1_B_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("12 mo B testis pseudotime graph")
 
 rm(yr1_A_0.05,yr1_A_0.1,yr1_A_0.15,yr1_A_0.2,yr1_A_0.25,yr1_A_0.3,yr1_A_0.35,yr1_A_0.4,yr1_A_0.45,yr1_A_0.5,yr1_A_0.55,yr1_A_0.6,yr1_A_0.65,yr1_A_0.7,yr1_A_0.75,yr1_A_0.8,yr1_A_0.85,yr1_A_0.9,yr1_A_0.95,yr1_A_1.0,
 yr1_B_0.05,yr1_B_0.1,yr1_B_0.15,yr1_B_0.2,yr1_B_0.25,yr1_B_0.3,yr1_B_0.35,yr1_B_0.4,yr1_B_0.45,yr1_B_0.5,yr1_B_0.55,yr1_B_0.6,yr1_B_0.65,yr1_B_0.7,yr1_B_0.75,yr1_B_0.8,yr1_B_0.85,yr1_B_0.9,yr1_B_0.95,yr1_B_1.0)
 rm(yr1_A, yr1_B)
 ```
 
+```{r average cell percents across both 12 mo. dataframes}
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_percents <-rowMeans(cbind(yr1_A_df$cell_percents,yr1_B_df$cell_percents))
+age <- c('mo12','mo12','mo12','mo12','mo12',
+         'mo12','mo12','mo12','mo12','mo12', 
+         'mo12','mo12','mo12','mo12','mo12',
+         'mo12','mo12','mo12','mo12','mo12')
+
+mo12_df <- data.frame(pseudotime_scores, cell_percents, age)
+
+ggplot(data=mo12_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 19, color = 'purple') + geom_path(size = 0.5, color = 'purple', group = 1, linetype = 'solid') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("12 mo testis pseudotime graph")
+```
+
 ```{r repeat for 20 mo. fish}
-yr1.6 <- subset(all_fertile_germ, sub.sample == 'yr1.6')
+yr1.6 <- subset(germ, sub.sample == 'mo20')
 meta <- yr1.6@meta.data
 meta$cell.id <- row.names(meta)
 yr1.6_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
@@ -720,17 +831,16 @@ age <- c('yr1.6','yr1.6','yr1.6','yr1.6','yr1.6',
 
 yr1.6_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
 
-ggplot(data=yr1.6_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 17, color = 'forestgreen') + geom_path(size = 0.5, color = 'forestgreen', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1.6 yr testis pseudotime graph")
+ggplot(data=yr1.6_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 17, color = 'forestgreen') + geom_path(size = 0.5, color = 'forestgreen', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("20 mo testis pseudotime graph")
 
-ggplot(data=yr1.6_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 17, color = 'forestgreen') + geom_path(size = 0.5, color = 'forestgreen', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1.6 yr testis pseudotime graph")
+ggplot(data=yr1.6_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 17, color = 'forestgreen') + geom_path(size = 0.5, color = 'forestgreen', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("20 mo testis pseudotime graph")
 
 rm(yr1.6_0.05,yr1.6_0.1,yr1.6_0.15,yr1.6_0.2,yr1.6_0.25,yr1.6_0.3,yr1.6_0.35,yr1.6_0.4,yr1.6_0.45,yr1.6_0.5,yr1.6_0.55,yr1.6_0.6,yr1.6_0.65,yr1.6_0.7,yr1.6_0.75,yr1.6_0.8,yr1.6_0.85,yr1.6_0.9,yr1.6_0.95,yr1.6_1.0)
 rm(yr1.6)
 ```
 
 ```{r repeat for 22 mo. fish}
- 
-yr1.8 <- subset(all_fertile_germ, sub.sample == 'yr1.8')
+yr1.8 <- subset(germ, sub.sample == '22mo')
 meta <- yr1.8@meta.data
 meta$cell.id <- row.names(meta)
 yr1.8_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
@@ -795,18 +905,340 @@ age <- c('yr1.8','yr1.8','yr1.8','yr1.8','yr1.8',
 
 yr1.8_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
 
-ggplot(data=yr1.8_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 5, color = 'dodgerblue') + geom_path(size = 0.5, color = 'dodgerblue', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1.8 yr testis pseudotime graph")
+ggplot(data=yr1.8_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 5, color = 'dodgerblue') + geom_path(size = 0.5, color = 'dodgerblue', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("22 mo testis pseudotime graph")
 
-ggplot(data=yr1.8_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 5, color = 'dodgerblue') + geom_path(size = 0.5, color = 'dodgerblue', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("1.8 yr testis pseudotime graph")
+ggplot(data=yr1.8_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 5, color = 'dodgerblue') + geom_path(size = 0.5, color = 'dodgerblue', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("22 mo testis pseudotime graph")
 
 rm(yr1.8_0.05,yr1.8_0.1,yr1.8_0.15,yr1.8_0.2,yr1.8_0.25,yr1.8_0.3,yr1.8_0.35,yr1.8_0.4,yr1.8_0.45,yr1.8_0.5,yr1.8_0.55,yr1.8_0.6,yr1.8_0.65,yr1.8_0.7,yr1.8_0.75,yr1.8_0.8,yr1.8_0.85,yr1.8_0.9,yr1.8_0.95,yr1.8_1.0)
 rm(yr1.8)
 ```
+```{r sort 27 month cells into 20 bins across the pseudotime spectrum}
+# 27 mo. fish C
+mo27_C <- subset(germ, sub.sample == '27mo_C')
+meta <- mo27_C@meta.data
+meta$cell.id <- row.names(meta)
+mo27_C_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
 
+mo27_C_0.05 <- subset(mo27_C_meta, pseudotime <= 0.05)
+mo27_C_0.1 <- subset(mo27_C_meta, pseudotime >= 0.05 & pseudotime <= 0.1)
+mo27_C_0.15 <- subset(mo27_C_meta, pseudotime >= 0.1 & pseudotime <= 0.15)
+mo27_C_0.2 <- subset(mo27_C_meta, pseudotime >= 0.15 & pseudotime <= 0.2)
+mo27_C_0.25 <- subset(mo27_C_meta, pseudotime >= 0.2 & pseudotime <= 0.25)
+mo27_C_0.3 <- subset(mo27_C_meta, pseudotime >= 0.25 & pseudotime <= 0.3)
+mo27_C_0.35 <- subset(mo27_C_meta, pseudotime >= 0.3 & pseudotime <= 0.35)
+mo27_C_0.4 <- subset(mo27_C_meta, pseudotime >= 0.35 & pseudotime <= 0.4)
+mo27_C_0.45 <- subset(mo27_C_meta, pseudotime >= 0.4 & pseudotime <= 0.45)
+mo27_C_0.5 <- subset(mo27_C_meta, pseudotime >= 0.45 & pseudotime <= 0.5)
+mo27_C_0.55 <- subset(mo27_C_meta, pseudotime >= 0.5 & pseudotime <= 0.55)
+mo27_C_0.6 <- subset(mo27_C_meta, pseudotime >= 0.55 & pseudotime <= 0.6)
+mo27_C_0.65 <- subset(mo27_C_meta, pseudotime >= 0.6 & pseudotime <= 0.65)
+mo27_C_0.7 <- subset(mo27_C_meta, pseudotime >= 0.65 & pseudotime <= 0.7)
+mo27_C_0.75 <- subset(mo27_C_meta, pseudotime >= 0.7 & pseudotime <= 0.75)
+mo27_C_0.8 <- subset(mo27_C_meta, pseudotime >= 0.75 & pseudotime <= 0.8)
+mo27_C_0.85 <- subset(mo27_C_meta, pseudotime >= 0.8 & pseudotime <= 0.85)
+mo27_C_0.9 <- subset(mo27_C_meta, pseudotime >= 0.85 & pseudotime <= 0.9)
+mo27_C_0.95 <- subset(mo27_C_meta, pseudotime >= 0.9 & pseudotime <= 0.95)
+mo27_C_1.0 <- subset(mo27_C_meta, pseudotime >= 0.95 & pseudotime <= 1.0)
+
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_counts <- c(length(mo27_C_0.05$cell.id), length(mo27_C_0.1$cell.id), length(mo27_C_0.15$cell.id),
+                 length(mo27_C_0.2$cell.id), length(mo27_C_0.25$cell.id), length(mo27_C_0.3$cell.id),
+                 length(mo27_C_0.35$cell.id), length(mo27_C_0.4$cell.id), length(mo27_C_0.45$cell.id),
+                 length(mo27_C_0.5$cell.id), length(mo27_C_0.55$cell.id), length(mo27_C_0.6$cell.id),
+                 length(mo27_C_0.65$cell.id), length(mo27_C_0.7$cell.id), length(mo27_C_0.75$cell.id),
+                 length(mo27_C_0.8$cell.id), length(mo27_C_0.85$cell.id), length(mo27_C_0.9$cell.id),
+                 length(mo27_C_0.95$cell.id), length(mo27_C_1.0$cell.id))
+
+cell_percents <- c(
+  (length(mo27_C_0.05$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.1$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.15$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.2$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.25$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.3$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.35$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.4$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.45$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.5$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.55$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.6$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.65$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.7$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.75$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.8$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.85$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.9$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_0.95$cell.id)/sum(cell_counts)*100),
+  (length(mo27_C_1.0$cell.id)/sum(cell_counts)*100))
+
+age <- c('mo27_C','mo27_C','mo27_C','mo27_C','mo27_C',
+         'mo27_C','mo27_C','mo27_C','mo27_C','mo27_C', 
+         'mo27_C','mo27_C','mo27_C','mo27_C','mo27_C',
+         'mo27_C','mo27_C','mo27_C','mo27_C','mo27_C')
+
+mo27_C_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
+
+ggplot(data=mo27_C_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 4, color = 'sienna2') + geom_path(size = 0.5, color = 'sienna2', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month C testis pseudotime graph")
+
+ggplot(data=mo27_C_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'sienna2') + geom_path(size = 0.5, color = 'sienna2', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month C testis pseudotime graph")
+
+# 5 mo. fish 2
+mo27_D <- subset(germ, sub.sample == '27mo_D')
+meta <- mo27_D@meta.data
+meta$cell.id <- row.names(meta)
+mo27_D_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
+
+mo27_D_0.05 <- subset(mo27_D_meta, pseudotime <= 0.05)
+mo27_D_0.1 <- subset(mo27_D_meta, pseudotime >= 0.05 & pseudotime <= 0.1)
+mo27_D_0.15 <- subset(mo27_D_meta, pseudotime >= 0.1 & pseudotime <= 0.15)
+mo27_D_0.2 <- subset(mo27_D_meta, pseudotime >= 0.15 & pseudotime <= 0.2)
+mo27_D_0.25 <- subset(mo27_D_meta, pseudotime >= 0.2 & pseudotime <= 0.25)
+mo27_D_0.3 <- subset(mo27_D_meta, pseudotime >= 0.25 & pseudotime <= 0.3)
+mo27_D_0.35 <- subset(mo27_D_meta, pseudotime >= 0.3 & pseudotime <= 0.35)
+mo27_D_0.4 <- subset(mo27_D_meta, pseudotime >= 0.35 & pseudotime <= 0.4)
+mo27_D_0.45 <- subset(mo27_D_meta, pseudotime >= 0.4 & pseudotime <= 0.45)
+mo27_D_0.5 <- subset(mo27_D_meta, pseudotime >= 0.45 & pseudotime <= 0.5)
+mo27_D_0.55 <- subset(mo27_D_meta, pseudotime >= 0.5 & pseudotime <= 0.55)
+mo27_D_0.6 <- subset(mo27_D_meta, pseudotime >= 0.55 & pseudotime <= 0.6)
+mo27_D_0.65 <- subset(mo27_D_meta, pseudotime >= 0.6 & pseudotime <= 0.65)
+mo27_D_0.7 <- subset(mo27_D_meta, pseudotime >= 0.65 & pseudotime <= 0.7)
+mo27_D_0.75 <- subset(mo27_D_meta, pseudotime >= 0.7 & pseudotime <= 0.75)
+mo27_D_0.8 <- subset(mo27_D_meta, pseudotime >= 0.75 & pseudotime <= 0.8)
+mo27_D_0.85 <- subset(mo27_D_meta, pseudotime >= 0.8 & pseudotime <= 0.85)
+mo27_D_0.9 <- subset(mo27_D_meta, pseudotime >= 0.85 & pseudotime <= 0.9)
+mo27_D_0.95 <- subset(mo27_D_meta, pseudotime >= 0.9 & pseudotime <= 0.95)
+mo27_D_1.0 <- subset(mo27_D_meta, pseudotime >= 0.95 & pseudotime <= 1.0)
+
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_counts <- c(length(mo27_D_0.05$cell.id), length(mo27_D_0.1$cell.id), length(mo27_D_0.15$cell.id),
+                 length(mo27_D_0.2$cell.id), length(mo27_D_0.25$cell.id), length(mo27_D_0.3$cell.id),
+                 length(mo27_D_0.35$cell.id), length(mo27_D_0.4$cell.id), length(mo27_D_0.45$cell.id),
+                 length(mo27_D_0.5$cell.id), length(mo27_D_0.55$cell.id), length(mo27_D_0.6$cell.id),
+                 length(mo27_D_0.65$cell.id), length(mo27_D_0.7$cell.id), length(mo27_D_0.75$cell.id),
+                 length(mo27_D_0.8$cell.id), length(mo27_D_0.85$cell.id), length(mo27_D_0.9$cell.id),
+                 length(mo27_D_0.95$cell.id), length(mo27_D_1.0$cell.id))
+
+cell_percents <- c(
+  (length(mo27_D_0.05$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.1$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.15$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.2$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.25$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.3$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.35$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.4$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.45$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.5$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.55$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.6$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.65$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.7$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.75$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.8$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.85$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.9$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_0.95$cell.id)/sum(cell_counts)*100),
+  (length(mo27_D_1.0$cell.id)/sum(cell_counts)*100))
+
+age <- c('mo27_D','mo27_D','mo27_D','mo27_D','mo27_D',
+         'mo27_D','mo27_D','mo27_D','mo27_D','mo27_D', 
+         'mo27_D','mo27_D','mo27_D','mo27_D','mo27_D',
+         'mo27_D','mo27_D','mo27_D','mo27_D','mo27_D')
+
+mo27_D_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
+
+mo27_D_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
+
+ggplot(data=mo27_D_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 4, color = 'sienna2') + geom_path(size = 0.5, color = 'sienna2', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month D testis pseudotime graph")
+
+ggplot(data=mo27_D_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'sienna2') + geom_path(size = 0.5, color = 'sienna2', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month D testis pseudotime graph")
+
+rm(mo27_C_0.05,mo27_C_0.1,mo27_C_0.15,mo27_C_0.2,mo27_C_0.25,mo27_C_0.3,mo27_C_0.35,mo27_C_0.4,mo27_C_0.45,mo27_C_0.5,mo27_C_0.55,mo27_C_0.6,mo27_C_0.65,mo27_C_0.7,mo27_C_0.75,mo27_C_0.8,mo27_C_0.85,mo27_C_0.9,mo27_C_0.95,mo27_C_1.0,
+mo27_D_0.05,mo27_D_0.1,mo27_D_0.15,mo27_D_0.2,mo27_D_0.25,mo27_D_0.3,mo27_D_0.35,mo27_D_0.4,mo27_D_0.45,mo27_D_0.5,mo27_D_0.55,mo27_D_0.6,mo27_D_0.65,mo27_D_0.7,mo27_D_0.75,mo27_D_0.8,mo27_D_0.85,mo27_D_0.9,mo27_D_0.95,mo27_D_1.0)
+rm(mo27_C, mo27_D)
+```
+
+```{r average 27 mo. complete}
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_percents <-rowMeans(cbind(mo27_C_df$cell_percents,mo27_D_df$cell_percents))
+age <- c('mo27','mo27','mo27','mo27','mo27',
+         'mo27','mo27','mo27','mo27','mo27', 
+         'mo27','mo27','mo27','mo27','mo27',
+         'mo27','mo27','mo27','mo27','mo27')
+
+mo27_CD_df <- data.frame(pseudotime_scores, cell_percents, age)
+
+ggplot(data=mo27_CD_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'sienna2') + geom_path(size = 0.5, color = 'sienna2', group = 1, linetype = 'solid') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 mo complete testis pseudotime graph")
+```
+
+```{r sort 27 month cells into 20 bins across the pseudotime spectrum}
+# 27 mo. fish A
+mo27_A <- subset(incomplete_germ, sub.sample == '27mo_A')
+meta <- mo27_A@meta.data
+meta$cell.id <- row.names(meta)
+mo27_A_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
+
+mo27_A_0.05 <- subset(mo27_A_meta, pseudotime <= 0.05)
+mo27_A_0.1 <- subset(mo27_A_meta, pseudotime >= 0.05 & pseudotime <= 0.1)
+mo27_A_0.15 <- subset(mo27_A_meta, pseudotime >= 0.1 & pseudotime <= 0.15)
+mo27_A_0.2 <- subset(mo27_A_meta, pseudotime >= 0.15 & pseudotime <= 0.2)
+mo27_A_0.25 <- subset(mo27_A_meta, pseudotime >= 0.2 & pseudotime <= 0.25)
+mo27_A_0.3 <- subset(mo27_A_meta, pseudotime >= 0.25 & pseudotime <= 0.3)
+mo27_A_0.35 <- subset(mo27_A_meta, pseudotime >= 0.3 & pseudotime <= 0.35)
+mo27_A_0.4 <- subset(mo27_A_meta, pseudotime >= 0.35 & pseudotime <= 0.4)
+mo27_A_0.45 <- subset(mo27_A_meta, pseudotime >= 0.4 & pseudotime <= 0.45)
+mo27_A_0.5 <- subset(mo27_A_meta, pseudotime >= 0.45 & pseudotime <= 0.5)
+mo27_A_0.55 <- subset(mo27_A_meta, pseudotime >= 0.5 & pseudotime <= 0.55)
+mo27_A_0.6 <- subset(mo27_A_meta, pseudotime >= 0.55 & pseudotime <= 0.6)
+mo27_A_0.65 <- subset(mo27_A_meta, pseudotime >= 0.6 & pseudotime <= 0.65)
+mo27_A_0.7 <- subset(mo27_A_meta, pseudotime >= 0.65 & pseudotime <= 0.7)
+mo27_A_0.75 <- subset(mo27_A_meta, pseudotime >= 0.7 & pseudotime <= 0.75)
+mo27_A_0.8 <- subset(mo27_A_meta, pseudotime >= 0.75 & pseudotime <= 0.8)
+mo27_A_0.85 <- subset(mo27_A_meta, pseudotime >= 0.8 & pseudotime <= 0.85)
+mo27_A_0.9 <- subset(mo27_A_meta, pseudotime >= 0.85 & pseudotime <= 0.9)
+mo27_A_0.95 <- subset(mo27_A_meta, pseudotime >= 0.9 & pseudotime <= 0.95)
+mo27_A_1.0 <- subset(mo27_A_meta, pseudotime >= 0.95 & pseudotime <= 1.0)
+
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_counts <- c(length(mo27_A_0.05$cell.id), length(mo27_A_0.1$cell.id), length(mo27_A_0.15$cell.id),
+                 length(mo27_A_0.2$cell.id), length(mo27_A_0.25$cell.id), length(mo27_A_0.3$cell.id),
+                 length(mo27_A_0.35$cell.id), length(mo27_A_0.4$cell.id), length(mo27_A_0.45$cell.id),
+                 length(mo27_A_0.5$cell.id), length(mo27_A_0.55$cell.id), length(mo27_A_0.6$cell.id),
+                 length(mo27_A_0.65$cell.id), length(mo27_A_0.7$cell.id), length(mo27_A_0.75$cell.id),
+                 length(mo27_A_0.8$cell.id), length(mo27_A_0.85$cell.id), length(mo27_A_0.9$cell.id),
+                 length(mo27_A_0.95$cell.id), length(mo27_A_1.0$cell.id))
+
+cell_percents <- c(
+  (length(mo27_A_0.05$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.1$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.15$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.2$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.25$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.3$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.35$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.4$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.45$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.5$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.55$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.6$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.65$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.7$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.75$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.8$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.85$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.9$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_0.95$cell.id)/sum(cell_counts)*100),
+  (length(mo27_A_1.0$cell.id)/sum(cell_counts)*100))
+
+age <- c('mo27_A','mo27_A','mo27_A','mo27_A','mo27_A',
+         'mo27_A','mo27_A','mo27_A','mo27_A','mo27_A', 
+         'mo27_A','mo27_A','mo27_A','mo27_A','mo27_A',
+         'mo27_A','mo27_A','mo27_A','mo27_A','mo27_A')
+
+mo27_A_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
+
+ggplot(data=mo27_A_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 4, color = 'pink2') + geom_path(size = 0.5, color = 'pink2', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month A testis pseudotime graph")
+
+ggplot(data=mo27_A_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'pink2') + geom_path(size = 0.5, color = 'pink2', group = 1) + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month A testis pseudotime graph")
+
+# 27 mo. fish B
+mo27_B <- subset(incomplete_germ, sub.sample == '27mo_B')
+meta <- mo27_B@meta.data
+meta$cell.id <- row.names(meta)
+mo27_B_meta <- select(meta, c("cell.id", "pseudotime", "sub.sample"))
+
+mo27_B_0.05 <- subset(mo27_B_meta, pseudotime <= 0.05)
+mo27_B_0.1 <- subset(mo27_B_meta, pseudotime >= 0.05 & pseudotime <= 0.1)
+mo27_B_0.15 <- subset(mo27_B_meta, pseudotime >= 0.1 & pseudotime <= 0.15)
+mo27_B_0.2 <- subset(mo27_B_meta, pseudotime >= 0.15 & pseudotime <= 0.2)
+mo27_B_0.25 <- subset(mo27_B_meta, pseudotime >= 0.2 & pseudotime <= 0.25)
+mo27_B_0.3 <- subset(mo27_B_meta, pseudotime >= 0.25 & pseudotime <= 0.3)
+mo27_B_0.35 <- subset(mo27_B_meta, pseudotime >= 0.3 & pseudotime <= 0.35)
+mo27_B_0.4 <- subset(mo27_B_meta, pseudotime >= 0.35 & pseudotime <= 0.4)
+mo27_B_0.45 <- subset(mo27_B_meta, pseudotime >= 0.4 & pseudotime <= 0.45)
+mo27_B_0.5 <- subset(mo27_B_meta, pseudotime >= 0.45 & pseudotime <= 0.5)
+mo27_B_0.55 <- subset(mo27_B_meta, pseudotime >= 0.5 & pseudotime <= 0.55)
+mo27_B_0.6 <- subset(mo27_B_meta, pseudotime >= 0.55 & pseudotime <= 0.6)
+mo27_B_0.65 <- subset(mo27_B_meta, pseudotime >= 0.6 & pseudotime <= 0.65)
+mo27_B_0.7 <- subset(mo27_B_meta, pseudotime >= 0.65 & pseudotime <= 0.7)
+mo27_B_0.75 <- subset(mo27_B_meta, pseudotime >= 0.7 & pseudotime <= 0.75)
+mo27_B_0.8 <- subset(mo27_B_meta, pseudotime >= 0.75 & pseudotime <= 0.8)
+mo27_B_0.85 <- subset(mo27_B_meta, pseudotime >= 0.8 & pseudotime <= 0.85)
+mo27_B_0.9 <- subset(mo27_B_meta, pseudotime >= 0.85 & pseudotime <= 0.9)
+mo27_B_0.95 <- subset(mo27_B_meta, pseudotime >= 0.9 & pseudotime <= 0.95)
+mo27_B_1.0 <- subset(mo27_B_meta, pseudotime >= 0.95 & pseudotime <= 1.0)
+
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_counts <- c(length(mo27_B_0.05$cell.id), length(mo27_B_0.1$cell.id), length(mo27_B_0.15$cell.id),
+                 length(mo27_B_0.2$cell.id), length(mo27_B_0.25$cell.id), length(mo27_B_0.3$cell.id),
+                 length(mo27_B_0.35$cell.id), length(mo27_B_0.4$cell.id), length(mo27_B_0.45$cell.id),
+                 length(mo27_B_0.5$cell.id), length(mo27_B_0.55$cell.id), length(mo27_B_0.6$cell.id),
+                 length(mo27_B_0.65$cell.id), length(mo27_B_0.7$cell.id), length(mo27_B_0.75$cell.id),
+                 length(mo27_B_0.8$cell.id), length(mo27_B_0.85$cell.id), length(mo27_B_0.9$cell.id),
+                 length(mo27_B_0.95$cell.id), length(mo27_B_1.0$cell.id))
+
+cell_percents <- c(
+  (length(mo27_B_0.05$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.1$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.15$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.2$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.25$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.3$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.35$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.4$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.45$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.5$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.55$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.6$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.65$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.7$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.75$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.8$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.85$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.9$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_0.95$cell.id)/sum(cell_counts)*100),
+  (length(mo27_B_1.0$cell.id)/sum(cell_counts)*100))
+
+age <- c('mo27_B','mo27_B','mo27_B','mo27_B','mo27_B',
+         'mo27_B','mo27_B','mo27_B','mo27_B','mo27_B', 
+         'mo27_B','mo27_B','mo27_B','mo27_B','mo27_B',
+         'mo27_B','mo27_B','mo27_B','mo27_B','mo27_B')
+
+mo27_B_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
+
+mo27_B_df <- data.frame(pseudotime_scores, cell_counts, cell_percents, age)
+
+ggplot(data=mo27_B_df, aes(x=pseudotime_scores, y=cell_counts, color = variable )) + geom_point(shape = 4, color = 'pink2') + geom_path(size = 0.5, color = 'pink2', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month B testis pseudotime graph")
+
+ggplot(data=mo27_B_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'pink2') + geom_path(size = 0.5, color = 'pink2', group = 1, linetype = 'dashed') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("27 month B testis pseudotime graph")
+
+rm(mo27_A_0.05,mo27_A_0.1,mo27_A_0.15,mo27_A_0.2,mo27_A_0.25,mo27_A_0.3,mo27_A_0.35,mo27_A_0.4,mo27_A_0.45,mo27_A_0.5,mo27_A_0.55,mo27_A_0.6,mo27_A_0.65,mo27_A_0.7,mo27_A_0.75,mo27_A_0.8,mo27_A_0.85,mo27_A_0.9,mo27_A_0.95,mo27_A_1.0,
+mo27_B_0.05,mo27_B_0.1,mo27_B_0.15,mo27_B_0.2,mo27_B_0.25,mo27_B_0.3,mo27_B_0.35,mo27_B_0.4,mo27_B_0.45,mo27_B_0.5,mo27_B_0.55,mo27_B_0.6,mo27_B_0.65,mo27_B_0.7,mo27_B_0.75,mo27_B_0.8,mo27_B_0.85,mo27_B_0.9,mo27_B_0.95,mo27_B_1.0)
+rm(mo27_A, mo27_B)
+```
+
+```{r 27 mo. incomplete average}
+pseudotime_scores <- c('0.05', '0.1', '0.15', '0.2', '0.25', '0.3', '0.35', '0.4', '0.45', '0.5',
+                       '0.55', '0.6', '0.65', '0.7', '0.75', '0.8', '0.85', '0.9', '0.95', '1.0')
+cell_percents <-rowMeans(cbind(mo27_A_df$cell_percents,mo27_B_df$cell_percents))
+age <- c('mo27','mo27','mo27','mo27','mo27',
+         'mo27','mo27','mo27','mo27','mo27', 
+         'mo27','mo27','mo27','mo27','mo27',
+         'mo27','mo27','mo27','mo27','mo27')
+
+mo27_AB_df <- data.frame(pseudotime_scores, cell_percents, age)
+
+ggplot(data=mo27_AB_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'pink2') + geom_path(size = 0.5, color = 'pink2', group = 1, linetype = 'solid') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("incomplete 27 mo testis pseudotime graph")
+```
 ```{r generate the composite data frame}
 # combine ages for one graph with 20 bins scaled
 fertile_pseudotime_df <- rbind(mo5_A_df, mo5_B_df, yr1_A_df, yr1_B_df, 
-                               yr1.6_df, yr1.8_df)
+                               yr1.6_df, yr1.8_df, mo27_C_df, mo27_D_df, mo27_A_df, mo27_B_df)
 colors <- c("red", "red","red", "red","red", "red","red", "red","red", "red",
             "red", "red","red", "red","red", "red","red", "red","red", "red",
             "red", "red","red", "red","red", "red","red", "red","red", "red",
@@ -822,7 +1254,15 @@ colors <- c("red", "red","red", "red","red", "red","red", "red","red", "red",
             "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
             "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
             "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
-            "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue")
+            "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
+            "sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2",
+            "sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2",
+            "sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2",
+            "sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2",
+            "pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2",
+            "pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2",
+            "pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2",
+            "pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2")
 shapes <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -834,7 +1274,15 @@ shapes <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
             2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
             5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-            5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4)
 lines <- c('solid', 'solid', 'solid', 'solid', 'solid', 
            'solid', 'solid', 'solid', 'solid', 'solid',
            'solid', 'solid', 'solid', 'solid', 'solid', 
@@ -858,233 +1306,246 @@ lines <- c('solid', 'solid', 'solid', 'solid', 'solid',
            'solid', 'solid', 'solid', 'solid', 'solid', 
            'solid', 'solid', 'solid', 'solid', 'solid',
            'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'dashed','dashed','dashed','dashed','dashed',
+           'dashed','dashed','dashed','dashed','dashed',
+           'dashed','dashed','dashed','dashed','dashed',
+           'dashed','dashed','dashed','dashed','dashed',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'dashed','dashed','dashed','dashed','dashed',
+           'dashed','dashed','dashed','dashed','dashed',
+           'dashed','dashed','dashed','dashed','dashed',
+           'dashed','dashed','dashed','dashed','dashed')
+
+ggplot(data=fertile_pseudotime_df, aes(x=pseudotime_scores, y=cell_counts, group = age, color = pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("testis germ cells by pseudotime") + scale_color_manual(values = c('red', 'purple', 'darkgreen', 'dodgerblue', 'sienna2', "pink2")) +labs(y= "# cells from each age", x = "differentiation")
+```
+
+```{r Figure 4 panel C, fig.height=6, fig.width=9}
+ggplot(data=fertile_pseudotime_df, aes(x=pseudotime_scores, y=cell_percents, group = age, color = pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("fertile germ cells by pseudotime") + scale_color_manual(values = c('red', 'purple', 'darkgreen', 'dodgerblue', 'sienna2', 'pink2')) +labs(y= "cells from each age (%)", x = "differentiation") 
+```
+```{r adjust df for the composite averaged data frame}
+# combine ages for one graph with 20 bins scaled
+mo5_df$cell_counts <- "0"
+mo12_df$cell_counts <- "0"
+mo27_CD_df$cell_counts <- "0"
+mo27_AB_df$cell_counts <- "0"
+
+mo27_CD_df$age <- "mo27_CD"
+mo27_AB_df$age <- "mo27_AB"
+```
+
+```{r generate the composite data frame for averaged, fig.height=4, fig.width=6}
+pseudotime_df <- rbind(mo5_df, mo12_df, yr1.6_df, yr1.8_df, mo27_CD_df, mo27_AB_df)
+colors <- c("red", "red","red", "red","red", "red","red", "red","red", "red",
+            "red", "red","red", "red","red", "red","red", "red","red", "red",
+            "purple", "purple","purple", "purple","purple", "purple","purple", "purple","purple", "purple",
+            "purple", "purple","purple", "purple","purple", "purple","purple", "purple","purple", "purple",
+            "darkgreen", "darkgreen","darkgreen", "darkgreen","darkgreen", "darkgreen","darkgreen", 
+            "darkgreen","darkgreen", "darkgreen",
+            "darkgreen", "darkgreen","darkgreen", "darkgreen","darkgreen", "darkgreen","darkgreen", 
+            "darkgreen","darkgreen", "darkgreen",
+            "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
+            "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
+            "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
+            "dodgerblue", "dodgerblue","dodgerblue", "dodgerblue",
+            "sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2",
+            "sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2","sienna2", "sienna2",
+            "pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2",
+            "pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2","pink2", "pink2")
+shapes <- c(0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+            2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+            5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4, 4, 4, 4)
+lines <- c('solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           
+           'solid', 'solid', 'solid', 'solid', 'solid', 
+           'solid', 'solid', 'solid', 'solid', 'solid',
+           'solid', 'solid', 'solid', 'solid', 'solid', 
            'solid', 'solid', 'solid', 'solid', 'solid')
 
-ggplot(data=fertile_pseudotime_df, aes(x=pseudotime_scores, y=cell_counts, group = age, color = fertile_pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("testis germ cells by pseudotime") + scale_color_manual(values = c('red', 'purple', 'green', 'dodgerblue')) +labs(y= "# cells from each age", x = "differentiation")
+ggplot(data=pseudotime_df, aes(x=pseudotime_scores, y=cell_percents, group = age, color = pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("germ cells by differentiation") + scale_color_manual(values = c('red', 'purple', 'green', 'dodgerblue', 'sienna2', 'pink2')) +labs(y= "cells from each age (%)", x = "differentiation") 
 ```
 
 
-```{r Figure 4 panel C}
-ggplot(data=fertile_pseudotime_df, aes(x=pseudotime_scores, y=cell_percents, group = age, color = fertile_pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("fertile germ cells by pseudotime") + scale_color_manual(values = c('red', 'purple', 'green', 'dodgerblue')) +labs(y= "cells from each age (%)", x = "differentiation") 
-```
-
-```{r group cell types for germ bar graph for each age}
-fertile <- readRDS("/Volumes/LaCie/seurat_objects/shiny_objects/fertile_atlas.rds")
-# categorize cell types by germ vs. soma
-fertile$category <- 'germ'
-germ@meta.data$category[germ@meta.data$cell.type == 'Sertoli and blood'] <- 'soma'
-germ@meta.data$category[germ@meta.data$cell.type == 'Leydig'] <- 'soma'
-germ@meta.data$category[germ@meta.data$cell.type == 'immune cells'] <- 'soma'
-germ@meta.data$category[germ@meta.data$cell.type == 'liver'] <- 'soma'
-
-# subset for germ cells
-fertile_germ <- subset(fertile, subset = idents == 'germ')
-# categorize cell types into 5 germ cell categories
-meta <- fertile_germ@meta.data
+```{r assign differentiation groups to germ object}
+meta <- germ@meta.data
 meta$cell.id <- row.names(meta)
-meta[meta$cell.type == 'spermatogonia 1', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatogonia 2', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatocytes 1', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'spermatocytes 2', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'spermatocytes 3', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'early round spermatids', "cell.category"] <- 'round spermatids'
-meta[meta$cell.type == 'middle round spermatids', "cell.category"] <- 'round spermatids'
-meta[meta$cell.type == 'late round spermatids', "cell.category"] <- 'round spermatids'
-meta[meta$cell.type == 'elongating spermatids', "cell.category"] <- 'elongating spermatids'
-meta[meta$cell.type == 'elongated spermatids', "cell.category"] <- 'elongated spermatids'
-meta[meta$cell.type == 'spermatozoa', "cell.category"] <- 'elongated spermatids'
+meta[meta$seurat_clusters == '0', "cell.category"] <- 'SPZ'
+meta[meta$seurat_clusters == '1', "cell.category"] <- 'E-SPT'
+meta[meta$seurat_clusters == '2', "cell.category"] <- 'SPC'
+meta[meta$seurat_clusters == '3', "cell.category"] <- 'R-SPT'
+meta[meta$seurat_clusters == '4', "cell.category"] <- 'SPG'
+meta[meta$seurat_clusters == '5', "cell.category"] <- 'SPC'
+meta[meta$seurat_clusters == '6', "cell.category"] <- 'SPG'
+meta[meta$seurat_clusters == '7', "cell.category"] <- 'SPZ'
+meta[meta$seurat_clusters == '8', "cell.category"] <- 'SPZ'
+meta[meta$seurat_clusters == '9', "cell.category"] <- 'R-SPT'
+meta[meta$seurat_clusters == '10', "cell.category"] <- 'SPC'
+meta[meta$seurat_clusters == '11', "cell.category"] <- 'SPG'
+meta[meta$seurat_clusters == '12', "cell.category"] <- 'SPG'
+meta[meta$seurat_clusters == '13', "cell.category"] <- 'SPC'
+meta[meta$seurat_clusters == '14', "cell.category"] <- 'R-SPT'
+meta[meta$seurat_clusters == '15', "cell.category"] <- 'SPC'
+meta[meta$seurat_clusters == '16', "cell.category"] <- 'SPC'
+meta[meta$seurat_clusters == '17', "cell.category"] <- 'R-SPT'
 cell.cat <- as.vector(meta$cell.category)
-fertile_germ <- AddMetaData(fertile_germ, cell.cat, "cell.category")
+germ <- AddMetaData(germ, cell.cat, "cell.category")
+```
 
-
-meta <- fertile_germ@meta.data
+```{r collect cell counts}
+germ$age <- factor(germ$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete"))
+germ$cell.category <- factor(germ$cell.category, levels = c("SPG", "SPC", "R-SPT", "E-SPT", "SPZ"))
+meta <- germ@meta.data
 meta$cell.id <- row.names(meta)
-meta <- select(meta, c(cell.id, age, cell.type, cell.category))
+meta <- select(meta, c(cell.id, age, cell.category))
 mo5_germ_meta <- subset(meta, meta$age == '5 mo.')
 yr1_germ_meta <- subset(meta, meta$age == '12 mo.')
 yr1.6_germ_meta <- subset(meta, meta$age == '20 mo.')
 yr1.8_germ_meta <- subset(meta, meta$age == '22 mo.')
+mo27_germ_meta <- subset(meta, meta$age == '27 mo. complete')
 
 table(mo5_germ_meta$cell.category)
- # elongated spermatids elongating spermatids      round spermatids         spermatocytes         spermatogonia 
- #                 3657                  2365                  1458                  2887                  1873 
- # 
 table(yr1_germ_meta$cell.category)
- # elongated spermatids elongating spermatids      round spermatids         spermatocytes         spermatogonia 
- #                 4316                  3280                  2874                  1790                  1518 
 table(yr1.6_germ_meta$cell.category)
- # elongated spermatids elongating spermatids      round spermatids         spermatocytes         spermatogonia 
- #                  745                   324                   290                   504                   699 
 table(yr1.8_germ_meta$cell.category)
- # elongated spermatids elongating spermatids      round spermatids         spermatocytes         spermatogonia 
- #                  649                   361                   469                   795                   850
+table(mo27_germ_meta$cell.category)
+table(incomplete_germ$cell.type.cat)
 ```
 
-```{r repeat for infertile data}
-meta <- old@meta.data
-meta$cell.id <- row.names(meta)
-meta[meta$cell.type == 'spermatogonia 1', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatogonia 2', "cell.category"] <- 'spermatogonia'
-meta[meta$cell.type == 'spermatocytes', "cell.category"] <- 'spermatocytes'
-meta[meta$cell.type == 'vSMC', "cell.category"] <- 'vSMC'
-meta[meta$cell.type == 'blood', "cell.category"] <- 'blood'
-meta[meta$cell.type == 'macrophages 1', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'macrophages 2', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'macrophages 3', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'macrophages 4', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'leukocytes', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'neutrophils', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'Treg', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 1', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 2', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 3', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 4', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'T cells 5', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'NK cells', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'B cells', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'unknown immune', "cell.category"] <- 'immune'
-meta[meta$cell.type == 'Sertoli & Leydig', "cell.category"] <- 'Sertoli'
-cell.cat <- as.vector(meta$cell.category)
-old <- AddMetaData(old, cell.cat, "cell.category")
-
-table(old@meta.data$cell.category)
-        # blood        immune       Sertoli spermatocytes spermatogonia          vSMC 
-        #  1222         14103           233           242          7521          1148
-```
-
-```{r build mega data frame for germ counts}
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "elongated spermatids")
-counts <- c(1873, 2887, 1458, 2365, 3657)
-percents <- counts/12650*100
+```{r build data frame for germ counts}
+cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
+counts <- c(3661,  4734,  2827,  1471,  3401)
+percents <- counts/16538*100
 age <- c("5 mo.", "5 mo.", "5 mo.", "5 mo.","5 mo.")
 mo5_df <- data.frame(age, cell.cats, counts, percents)
 
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "elongated spermatids")
-counts <- c(1518, 1790, 2874, 3280, 4316)
+cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
+counts <- c(1324,  2520,  3769,  1990,  4187)
 percents <- counts/14084*100
 age <- c("12 mo.", "12 mo.", "12 mo.", "12 mo.","12 mo.")
 mo12_df <- data.frame(age, cell.cats, counts, percents)
 
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "elongated spermatids")
-counts <- c(699, 504, 290, 324, 745)
-percents <- counts/2636*100
+cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
+counts <- c(632,   630,   392,   177,   715)
+percents <- counts/2615*100
 age <- c("20 mo.", "20 mo.", "20 mo.", "20 mo.","20 mo.")
 mo20_df <- data.frame(age, cell.cats, counts, percents)
 
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "elongated spermatids")
-counts <- c(850, 795, 469, 361, 649)
-percents <- counts/3289*100
+cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
+counts <- c(804,   935,   504,   241,   596)
+percents <- counts/3286*100
 age <- c("22 mo.", "22 mo.", "22 mo.", "22 mo.","22 mo.")
 mo22_df <- data.frame(age, cell.cats, counts, percents)
 
-cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "elongated spermatids")
+cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
+counts <- c(3473,  3621,   448,   106,   583)
+percents <- counts/8682*100
+age <- c("27 mo. complete", "27 mo. complete", "27 mo. complete", "27 mo. complete","27 mo. complete")
+mo27_impaired_df <- data.frame(age, cell.cats, counts, percents)
+
+cell.cats <- c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")
 counts <- c(7521, 242, 0, 0, 0)
-percents <- counts/32659*100
-age <- c("27 mo.", "27 mo.", "27 mo.", "27 mo.","27 mo.")
-mo27_df <- data.frame(age, cell.cats, counts, percents)
+percents <- counts/24469*100
+age <- c("27 mo. incomplete", "27 mo. incomplete", "27 mo. incomplete", "27 mo. incomplete","27 mo. incomplete")
+mo27_incomplete_df <- data.frame(age, cell.cats, counts, percents)
 
-germ_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_df)
-germ_df$age <- factor(germ_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo."))
+germ_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_impaired_df, mo27_incomplete_df)
+germ_df$age <- factor(germ_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo. incomplete"))
 ```
 
-```{r Figure 4 panel E}
-ggplot(germ_df, aes(fill=age, x=factor(cell.cats, level=c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "elongated spermatids")), y=percents)) + 
+```{r Figure 4 panel A}
+ggplot(germ_df, aes(fill=age, x=factor(cell.cats, level=c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")), y=percents)) + 
   geom_bar(position = 'dodge', stat = 'identity', color = 'black') + theme_classic() + 
-  ylab("normalized percent") + xlab("cell type") + theme(plot.title = element_text(hjust = 0.5, size = 12)) + theme(axis.text.x = element_text(angle = 0, vjust = 0, hjust=.5, size = 5)) + scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87')) + ggtitle("relative abundance of germ cell types across fertility")
+  ylab("normalized percent") + xlab("cell type") + theme(plot.title = element_text(hjust = 0.5, size = 12)) + theme(axis.text.x = element_text(angle = 0, vjust = 0, hjust=.5, size = 5)) + scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87', '#051732')) + ggtitle("relative abundance of germ cell types across fertility")
 ```
-
-# creating SPG atlas
 ```{r load individual objects}
-mo5 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/mo5.rds")
-mo12 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr1.rds")
-mo20 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr1.6.rds")
-mo22 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr1.8.rds")
-mo27 <- readRDS("/Volumes/LaCie/seurat_objects/all_fertile/yr2.2_germ.rds")
+mo5 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo5.rds")
+mo12 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo12.rds")
+mo20 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo20.rds")
+mo22 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo22.rds")
+mo27_complete <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete.rds")
+mo27_incomplete <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete.rds")
 ```
 
-```{r}
-#DimPlot(mo5, group.by = 'cell.type')
-DimPlot(mo5, group.by = 'seurat_clusters', label = T)
-FeaturePlot(mo5, "rna_ddx4")
-FeaturePlot(mo5, "rna_sycp3")
 
-# 11, 12, 13, 5
+```{r subset objects for SPG clusters}
+mo5_subset <- subset(mo5, subset = cell.type == c("spermatogonia 1", "spermatogonia 2", "spermatogonia 3"))
+mo12_subset <- subset(mo12, subset = cell.type == c("spermatogonia 1", "spermatogonia 2"))
+mo20_subset <- subset(mo20, subset = cell.type == c("spermatogonia 1", "spermatogonia 2", "spermatogonia 3"))
+mo22_subset <- subset(mo22, subset = cell.type == c("spermatogonia 1", "spermatogonia 2"))
+mo27_complete_subset <- subset(mo27_complete, subset = cell.type == c("spermatogonia 1", "spermatogonia 2", "spermatogonia 3", "spermatogonia 4"))
+mo27_incomplete_subset <- subset(mo27_incomplete, subset = cell.type == c("spermatogonia 1", "spermatogonia 2"))
 ```
-```{r}
-DimPlot(mo12, group.by = 'seurat_clusters', label = T)
-FeaturePlot(mo12, "rna_ddx4")
-FeaturePlot(mo12, "rna_sycp3")
-VlnPlot(mo12, "rna_ddx4", pt.size = 0)
-VlnPlot(mo12, "rna_sycp3", pt.size = 0)
-# 8, 7, 9
-```
-```{r}
-DimPlot(mo20, group.by = 'seurat_clusters', label = T)
-FeaturePlot(mo20, "rna_ddx4")
-FeaturePlot(mo20, "rna_sycp3")
-VlnPlot(mo20, "rna_ddx4", pt.size = 0)
-VlnPlot(mo20, "rna_sycp3", pt.size = 0)
-# 10, 6, 9
-```
-```{r}
-DimPlot(mo22, group.by = 'seurat_clusters', label = T)
-FeaturePlot(mo22, "rna_ddx4")
-FeaturePlot(mo22, "rna_sycp3")
-VlnPlot(mo22, "rna_ddx4", pt.size = 0)
-VlnPlot(mo22, "rna_sycp3", pt.size = 0)
-# 6, 7, 5
-```
-```{r}
-DimPlot(mo27, group.by = 'seurat_clusters', label = T)
-FeaturePlot(mo27, "rna_ddx4")
-FeaturePlot(mo27, "rna_sycp3")
-VlnPlot(mo27, "rna_ddx4", pt.size = 0)
-VlnPlot(mo27, "rna_sycp3", pt.size = 0)
-# 0, 2
-```
-```{r subset SPG clusters from each age}
-mo5_subset <- subset(mo5, idents = c(11, 12, 13, 5))
-mo12_subset <- subset(mo12, idents = c(8, 7, 9))
-mo20_subset <- subset(mo20, idents = c(10, 6, 9))
-mo22_subset <- subset(mo22, idents = c(6, 7, 5))
-mo27_subset <- subset(mo27, idents = c(0, 2))
-
-mo5_subset@meta.data$age.cat <- 'fertile'
-mo12_subset@meta.data$age.cat <- 'fertile'
-mo20_subset@meta.data$age.cat <- 'fertile'
-mo22_subset@meta.data$age.cat <- 'fertile'
-mo27_subset@meta.data$age.cat <- 'infertile'
-
-mo5_subset@meta.data$age <- '5 mo.'
-mo12_subset@meta.data$age <- '12 mo.'
-mo20_subset@meta.data$age <- '20 mo.'
-mo22_subset@meta.data$age <- '22 mo.'
-mo27_subset@meta.data$age <- '27 mo.'
+```{r assign age groups}
+mo5_subset@meta.data$age.cat <- '5 - 22 mo.'
+mo12_subset@meta.data$age.cat <- '5 - 22 mo.'
+mo20_subset@meta.data$age.cat <- '5 - 22 mo.'
+mo22_subset@meta.data$age.cat <- '5 - 22 mo.'
+mo27_complete_subset@meta.data$age.cat <- '27 mo. complete'
+mo27_incomplete_subset@meta.data$age.cat <- '27 mo. incomplete'
 ```
 
-```{r integrate SPG}
-SPG.anchors <- FindIntegrationAnchors(object.list = list(mo5_subset, mo12_subset, mo20_subset,
-                                                         mo22_subset, mo27_subset), dims = 1:10)
+```{r integrate SPG, fig.height=4, fig.width=4, message=FALSE, warning=FALSE}
+SPG.anchors <- FindIntegrationAnchors(object.list = list(mo5_subset, mo12_subset, mo20_subset, mo22_subset, mo27_complete_subset, mo27_incomplete_subset), dims = 1:10)
 SPG <- IntegrateData(anchorset = SPG.anchors, dims = 1:10)
 DefaultAssay(SPG) <- "integrated"
 SPG <- FindVariableFeatures(SPG)
 SPG <- ScaleData(SPG)
 SPG <- RunPCA(SPG, features  = VariableFeatures(object = SPG))
-SPG <- RunUMAP(SPG, reduction = 'pca', dims = 1:15)
-SPG <- FindNeighbors(SPG, reduction = 'pca', dims = 1:15)
+SPG <- RunUMAP(SPG, reduction = 'pca', dims = 1:10)
+SPG <- FindNeighbors(SPG, reduction = 'pca', dims = 1:10)
 SPG <- FindClusters(SPG, resolution = 0.5)
+DimPlot(SPG, group.by = 'age.cat', cols = c('forestgreen', 'gray', 'darkmagenta'), pt.size = 1.5) + NoAxes() + ggtitle(" ") + NoLegend()
 ```
-
-```{r Figure 4 panel D}
-DimPlot(SPG, group.by = 'age.cat', cols = c('#A15D98', '#C3C3C3'), pt.size = 1.5, shuffle = T) + NoAxes() + NoLegend() + ggtitle(" ")
+```{r}
+table(SPG$age)
+SPG$age <- factor(SPG$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo."))
+DimPlot(SPG, split.by = 'age', pt.size = 1.5) + NoAxes() + ggtitle(" ") + NoLegend()
 ```
-
 ```{r get lists of fertile and infertile SPG}
 SPG_meta <- SPG@meta.data
 SPG_meta$cell.id <- row.names(SPG_meta)
-
-infertile_SPG <- subset(SPG_meta, age.cat == 'infertile')
-fertile_SPG <- subset(SPG_meta, age.cat == 'fertile')
+table(SPG$sperm.status)
+infertile_SPG <- subset(SPG_meta, sperm.status == 'incomplete')
+fertile_SPG <- subset(SPG_meta, sperm.status == 'complete')
 infertile_SPG_cells <- as.vector(infertile_SPG$cell.id)
 fertile_SPG_cells <- as.vector(fertile_SPG$cell.id)
 ```
@@ -1106,63 +1567,344 @@ SPG_subset <- SPG_markers[SPG_markers$gene %in% TFs,]
 ```
 
 ```{r make list of genes for dotplot}
-fertile10 <- c("dmrt1", "llin52", "sub1a", "sub1b", "her9", 
-             "e2f5", "hsf5", "mycbp", "polr2l", "cremb")
-known <- c("fosab", "ilf2", "piwil1")
-infertile10 <- c("zglp1","dnmt1", "bzw1b","zgc:113424","nanog",
-                 "pou5f3", "brd4", "sox11b", "csde1", "smarca4a")
+DefaultAssay(SPG) <- "RNA"
+fertile10 <- c("dmrt1", "e2f5", "sub1b", "sub1a", "lin52")
+known <- c("fosab", "ilf2", "piwil1", "dazl", "ccnb3", "hist1h4l", "pcna", "sumo3b", "ddx4")
+infertile10 <- c("zglp1", "bzw1b", "dnmt1", "zgc:113424", "xbp1")
+pluripotency <- c("nanog", "pou5f3", "sox2")
+ovary <- c("zp3.2", "zp3b", "zp2.2", "bmp15", "rec8a", "gdf9", "nanos3")
 
-
-my_levels <- c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo.")
+my_levels <- c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo.")
 SPG@meta.data$age <- factor(x = SPG@meta.data$age, levels = my_levels)
 
-features_for_dotplot <- c(infertile10, known, fertile10)
+# these extra genes in blue are just placeholders to create space for subheaders in the final figure
+features_for_dotplot <- c(ovary, "tssk6", "nanos2", pluripotency, "gsdf", "star", infertile10, "spo11", "tagln", fertile10, "acta2", "sycp2", known)
 ```
 
-```{r Figure 4 panel E}
+```{r Figure 4 panel E, fig.height=6.9, fig.width=8.8, message=FALSE, warning=FALSE, paged.print=FALSE}
 DotPlot(SPG, features = features_for_dotplot, scale = T, group.by = 'age') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + 
-  theme(axis.text.x = element_text(angle =45,hjust = 1, size = 12, family = 'Arial')) + 
-  theme(axis.text.y = element_text(angle =0,hjust = 1, size = 12, family = 'Arial')) + 
-  theme(legend.title = element_text(size = 12, family = 'Arial')) + 
+  theme(axis.text.x = element_text(angle =45,hjust = 1, size = 0, family = 'Arial')) + 
+  theme(axis.text.y = element_text(angle =0,hjust = 1, size = 14, family = 'Arial')) + 
+  theme(legend.title = element_text(size = 10, family = 'Arial')) + 
   theme(axis.title = element_text(size = 0)) & coord_flip()
 ```
-
-```{r Supplemental Figure 4 panel A}
-features <- c("mdm2", "phlda3", "foxo3b", "exo5", "casp8", "tp53inp1")
-DefaultAssay(fertile) <- "RNA"
-DefaultAssay(infertile) <- "RNA"
-my_levels <- c("spermatogonia 1", "spermatogonia 2", "spermatocytes", "Sertoli & Leydig", "vSMC", "blood", "macrophages 1",
-               "macrophages 2", "macrophages 3", "T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "Treg",
-               "NK cells", "B cells", "neutrophils", "leukocytes", "unknown immune")
-infertile@meta.data$cell.type <- factor(x = infertile@meta.data$cell.type, levels = my_levels)
-
-my_levels <- c("spermatogonia 1", "spermatogonia 2", "spermatocytes 1", "spermatocytes 2", "spermatocytes 3", "early round spermatids",
-               "middle round spermatids", "late round spermatids", "elongating spermatids", "elongated spermatids", "spermatozoa", "Sertoli and blood", "Leydig", "immune cells", "liver")
-fertile@meta.data$cell.type <- factor(x = fertile@meta.data$cell.type, levels = my_levels)
-
-VlnPlot(fertile, features, stack = TRUE, group.by = 'cell.type', sort = F, flip = TRUE) +theme(legend.position = "none") + ggtitle(" ") + theme(text = element_text(family = 'Arial')) + theme(axis.text = element_text(family = 'Arial', size = 12))
+```{r violin plot zp3, fig.height=4.1, fig.width=3.6}
+DefaultAssay(SPG) <- "RNA"
+zps <- c("zp3b", "zp3.2", "zp3a.1", "zp3a.2", "zp2.2")
+SPG$age <- factor(SPG$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo."))
+VlnPlot(SPG, zps, group.by = 'age', stack = T, flip = T) + NoLegend()
+```
+```{r subset SPG by age}
+DefaultAssay(SPG) <- "RNA"
+mo5 <- subset(SPG, age == '5 mo.')
+mo12 <- subset(SPG, age == '12 mo.')
+mo20 <- subset(SPG, age == '20 mo.')
+mo22 <- subset(SPG, age == '22 mo.')
+mo27 <- subset(SPG, age == '27 mo. complete')
+mo27_incomplete <- subset(SPG, age == '27 mo.')
 ```
 
-```{r Supplemental Figure 4 panel B}
-VlnPlot(infertile, features, stack = TRUE, group.by = 'cell.type', sort = F, flip = TRUE) +theme(legend.position = "none") + ggtitle(" ") + theme(text = element_text(family = 'Arial')) + theme(axis.text = element_text(family = 'Arial', size = 12))
+```{r get unique cells for mo5}
+mo5_zp3b <- as.data.frame(WhichCells(mo5, expression = zp3b > 0))
+names(mo5_zp3b)[names(mo5_zp3b) == "WhichCells(mo5, expression = zp3b > 0)"] <- "cells"
+
+mo5_zp3.2 <- as.data.frame(WhichCells(mo5, expression = zp3.2 > 0))
+names(mo5_zp3.2)[names(mo5_zp3.2) == "WhichCells(mo5, expression = zp3.2 > 0)"] <- "cells"
+
+mo5_zp3a.1 <- as.data.frame(WhichCells(mo5, expression = zp3a.1 > 0))
+names(mo5_zp3a.1)[names(mo5_zp3a.1) == "WhichCells(mo5, expression = zp3a.1 > 0)"] <- "cells"
+
+mo5_zp3a.2 <- as.data.frame(WhichCells(mo5, expression = zp3a.2 > 0))
+names(mo5_zp3a.2)[names(mo5_zp3a.2) == "WhichCells(mo5, expression = zp3a.2 > 0)"] <- "cells"
+
+mo5_zp2.2 <- as.data.frame(WhichCells(mo5, expression = zp2.2 > 0))
+names(mo5_zp2.2)[names(mo5_zp2.2) == "WhichCells(mo5, expression = zp2.2 > 0)"] <- "cells"
+
+mo5_cells <- rbind(mo5_zp3b, mo5_zp3.2, mo5_zp3a.1, mo5_zp3a.2, mo5_zp2.2)
+
+unique_mo5_cells <- unique(mo5_cells$cells)
+length(unique_mo5_cells)
 ```
 
-```{r Supplemental Figure 4 panel C}
-FeaturePlot(fertile, "rna_mdm2", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_mdm2", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
+```{r get unique cells for mo12}
+mo12_zp3b <- as.data.frame(WhichCells(mo12, expression = zp3b > 0))
+names(mo12_zp3b)[names(mo12_zp3b) == "WhichCells(mo12, expression = zp3b > 0)"] <- "cells"
 
-FeaturePlot(fertile, "rna_phlda3", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_phlda3", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
+mo12_zp3.2 <- as.data.frame(WhichCells(mo12, expression = zp3.2 > 0))
+names(mo12_zp3.2)[names(mo12_zp3.2) == "WhichCells(mo12, expression = zp3.2 > 0)"] <- "cells"
 
-FeaturePlot(fertile, "rna_foxo3b", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_foxo3b", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
+mo12_zp3a.1 <- as.data.frame(WhichCells(mo12, expression = zp3a.1 > 0))
+names(mo12_zp3a.1)[names(mo12_zp3a.1) == "WhichCells(mo12, expression = zp3a.1 > 0)"] <- "cells"
 
-FeaturePlot(fertile, "rna_exo5", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_exo5", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
+mo12_zp3a.2 <- as.data.frame(WhichCells(mo12, expression = zp3a.2 > 0))
+names(mo12_zp3a.2)[names(mo12_zp3a.2) == "WhichCells(mo12, expression = zp3a.2 > 0)"] <- "cells"
 
-FeaturePlot(fertile, "rna_casp8", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_casp8", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
+mo12_zp2.2 <- as.data.frame(WhichCells(mo12, expression = zp2.2 > 0))
+names(mo12_zp2.2)[names(mo12_zp2.2) == "WhichCells(mo12, expression = zp2.2 > 0)"] <- "cells"
 
-FeaturePlot(fertile, "rna_tp53inp1", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(infertile, "rna_tp53inp1", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1)
+mo12_cells <- rbind(mo12_zp3b, mo12_zp3.2, mo12_zp3a.1, mo12_zp3a.2, mo12_zp2.2)
+
+unique_mo12_cells <- unique(mo12_cells$cells)
+length(unique_mo12_cells)
+```
+
+```{r get unique cells for mo20}
+# mo20_zp3b <- as.data.frame(WhichCells(mo20, expression = zp3b > 0))
+# names(mo20_zp3b)[names(mo20_zp3b) == "WhichCells(mo20, expression = zp3b > 0)"] <- "cells"
+
+mo20_zp3.2 <- as.data.frame(WhichCells(mo20, expression = zp3.2 > 0))
+names(mo20_zp3.2)[names(mo20_zp3.2) == "WhichCells(mo20, expression = zp3.2 > 0)"] <- "cells"
+
+#mo20_zp3a.1 <- as.data.frame(WhichCells(mo20, expression = zp3a.1 > 0))
+#names(mo20_zp3a.1)[names(mo20_zp3a.1) == "WhichCells(mo20, expression = zp3a.1 > 0)"] <- "cells"
+
+mo20_zp3a.2 <- as.data.frame(WhichCells(mo20, expression = zp3a.2 > 0))
+names(mo20_zp3a.2)[names(mo20_zp3a.2) == "WhichCells(mo20, expression = zp3a.2 > 0)"] <- "cells"
+
+#mo20_zp2.2 <- as.data.frame(WhichCells(mo20, expression = zp2.2 > 0))
+#names(mo20_zp2.2)[names(mo20_zp2.2) == "WhichCells(mo20, expression = zp2.2 > 0)"] <- "cells"
+
+mo20_cells <- rbind(mo20_zp3.2, mo20_zp3a.2)
+
+unique_mo20_cells <- unique(mo20_cells$cells)
+length(unique_mo20_cells)
+```
+
+```{r get unique cells for mo22}
+mo22_zp3b <- as.data.frame(WhichCells(mo22, expression = zp3b > 0))
+names(mo22_zp3b)[names(mo22_zp3b) == "WhichCells(mo22, expression = zp3b > 0)"] <- "cells"
+
+mo22_zp3.2 <- as.data.frame(WhichCells(mo22, expression = zp3.2 > 0))
+names(mo22_zp3.2)[names(mo22_zp3.2) == "WhichCells(mo22, expression = zp3.2 > 0)"] <- "cells"
+
+#mo22_zp3a.1 <- as.data.frame(WhichCells(mo22, expression = zp3a.1 > 0))
+#names(mo22_zp3a.1)[names(mo22_zp3a.1) == "WhichCells(mo22, expression = zp3a.1 > 0)"] <- "cells"
+
+mo22_zp3a.2 <- as.data.frame(WhichCells(mo22, expression = zp3a.2 > 0))
+names(mo22_zp3a.2)[names(mo22_zp3a.2) == "WhichCells(mo22, expression = zp3a.2 > 0)"] <- "cells"
+
+#mo22_zp2.2 <- as.data.frame(WhichCells(mo22, expression = zp2.2 > 0))
+#names(mo22_zp2.2)[names(mo22_zp2.2) == "WhichCells(mo22, expression = zp2.2 > 0)"] <- "cells"
+
+mo22_cells <- rbind(mo22_zp3b, mo22_zp3.2, mo22_zp3a.2)
+
+unique_mo22_cells <- unique(mo22_cells$cells)
+length(unique_mo22_cells)
+```
+
+```{r get unique cells for mo27}
+mo27_zp3b <- as.data.frame(WhichCells(mo27, expression = zp3b > 0))
+names(mo27_zp3b)[names(mo27_zp3b) == "WhichCells(mo27, expression = zp3b > 0)"] <- "cells"
+
+#mo27_zp3.2 <- as.data.frame(WhichCells(mo27, expression = zp3.2 > 0))
+#names(mo27_zp3.2)[names(mo27_zp3.2) == "WhichCells(mo27, expression = zp3.2 > 0)"] <- "cells"
+
+mo27_zp3a.1 <- as.data.frame(WhichCells(mo27, expression = zp3a.1 > 0))
+names(mo27_zp3a.1)[names(mo27_zp3a.1) == "WhichCells(mo27, expression = zp3a.1 > 0)"] <- "cells"
+
+mo27_zp3a.2 <- as.data.frame(WhichCells(mo27, expression = zp3a.2 > 0))
+names(mo27_zp3a.2)[names(mo27_zp3a.2) == "WhichCells(mo27, expression = zp3a.2 > 0)"] <- "cells"
+
+#mo27_zp2.2 <- as.data.frame(WhichCells(mo27, expression = zp2.2 > 0))
+#names(mo27_zp2.2)[names(mo27_zp2.2) == "WhichCells(mo27, expression = zp2.2 > 0)"] <- "cells"
+
+mo27_cells <- rbind(mo27_zp3b, mo27_zp3a.1, mo27_zp3a.2)
+
+unique_mo27_cells <- unique(mo27_cells$cells)
+length(unique_mo27_cells)
+```
+
+```{r get unique cells for mo27_incomplete}
+mo27_incomplete_zp3b <- as.data.frame(WhichCells(mo27_incomplete, expression = zp3b > 0))
+names(mo27_incomplete_zp3b)[names(mo27_incomplete_zp3b) == "WhichCells(mo27_incomplete, expression = zp3b > 0)"] <- "cells"
+
+mo27_incomplete_zp3.2 <- as.data.frame(WhichCells(mo27_incomplete, expression = zp3.2 > 0))
+names(mo27_incomplete_zp3.2)[names(mo27_incomplete_zp3.2) == "WhichCells(mo27_incomplete, expression = zp3.2 > 0)"] <- "cells"
+
+mo27_incomplete_zp3a.1 <- as.data.frame(WhichCells(mo27_incomplete, expression = zp3a.1 > 0))
+names(mo27_incomplete_zp3a.1)[names(mo27_incomplete_zp3a.1) == "WhichCells(mo27_incomplete, expression = zp3a.1 > 0)"] <- "cells"
+
+mo27_incomplete_zp3a.2 <- as.data.frame(WhichCells(mo27_incomplete, expression = zp3a.2 > 0))
+names(mo27_incomplete_zp3a.2)[names(mo27_incomplete_zp3a.2) == "WhichCells(mo27_incomplete, expression = zp3a.2 > 0)"] <- "cells"
+
+mo27_incomplete_zp2.2 <- as.data.frame(WhichCells(mo27_incomplete, expression = zp2.2 > 0))
+names(mo27_incomplete_zp2.2)[names(mo27_incomplete_zp2.2) == "WhichCells(mo27_incomplete, expression = zp2.2 > 0)"] <- "cells"
+
+mo27_incomplete_cells <- rbind(mo27_incomplete_zp3b, mo27_incomplete_zp3a.1, mo27_incomplete_zp3a.2, mo27_incomplete_zp2.2, mo27_incomplete_zp3.2)
+
+unique_mo27_incomplete_cells <- unique(mo27_incomplete_cells$cells)
+length(unique_mo27_incomplete_cells)
+```
+
+```{r percent zp cells for each age}
+40/873*100 # 4.6
+25/602*100 # 4.2
+3/136*100 # 2.2
+13/253*100 # 5.1
+8/777*100 # 1.0
+3756/3756*100 # 100
+```
+
+# ovary-like and ube2 supplemental figures (Figure S8)
+
+```{r define ube2 genes}
+ube2 <- c("ube2b", "ube2s", "ube2j2", "ube2r2", "ube2wb", "ube2z")
+```
+
+```{r violin plots in Sposato et al data I, fig.height=7, fig.width=5}
+DefaultAssay(complete_germ) <- "RNA"
+complete_germ@meta.data$age <- factor(x = complete_germ@meta.data$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete"))
+VlnPlot(complete_germ, features = ube2, stack = T, flip = T, group.by = 'age') + NoLegend()
+```
+
+
+```{r violin plots in Sposato et al data II}
+DefaultAssay(incomplete_germ) <- "RNA"
+VlnPlot(incomplete_germ, features = ube2, stack = T, flip = T, group.by = 'age')
+```
+
+
+```{r violin plots in Sposato et al data}
+```
+
+
+
+```{r}
+Haimbaugh <- readRDS("/Volumes/LaCie/seurat_objects/Haimbaugh/Haimbaugh_all_samples.rds")
+DimPlot(Haimbaugh)
+```
+
+```{r panel E part I}
+Haimbaugh@meta.data$condition <- factor(x = Haimbaugh@meta.data$condition, levels = c("untreated", "treated"))
+VlnPlot(Haimbaugh, features = c("ube2b", "ube2s", "ube2j2", "ube2r2", "ube2z"), stack = T, flip = T, group.by = 'condition')
+```
+
+```{r}
+ube2 <- c("ube2b", "ube2s", "ube2j2", "ube2r2", "ube2wb", "ube2z")
+```
+
+```{r}
+complete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_w_pseudotime.rds")
+incomplete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_w_pseudotime.rds")
+```
+
+
+```{r}
+DefaultAssay(complete_germ) <- "RNA"
+complete_germ@meta.data$age <- factor(x = complete_germ@meta.data$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete"))
+VlnPlot(complete_germ, features = ube2, stack = T, flip = T, group.by = 'age')
+DefaultAssay(incomplete_germ) <- "RNA"
+VlnPlot(incomplete_germ, features = ube2, stack = T, flip = T, group.by = 'age')
+```
+
+```{r}
+Qian <- readRDS("/Volumes/LaCie/seurat_objects/Qian/Qian.rds")
+```
+
+```{r panel E part II}
+DefaultAssay(Qian) <- "RNA"
+VlnPlot(Qian, features = ube2, stack = T, flip = T, group.by = 'age')
+```
+
+```{r}
+plot <- DimPlot(Haimbaugh, label = T, group.by = 'seurat_clusters')
+cells.located <- CellSelector(plot = plot)
+Haimbaugh_SPG <- Haimbaugh[,colnames(Haimbaugh) %in% cells.located]
+```
+
+```{r}
+DimPlot(Haimbaugh_SPG)
+```
+
+```{r}
+ScaleData(Haimbaugh_SPG, assay = "RNA")
+```
+
+```{r}
+markers <- c("fosab", "il2", "piwil1", "dazl", "ccnb3", "hist1h4l", "pcna", "sumo3b", "ddx4")
+Haimbaugh_SPG@meta.data$condition <- factor(x = Haimbaugh_SPG@meta.data$condition, levels = c("untreated", "treated"))
+
+DotPlot(Haimbaugh_SPG, features = markers, scale = T, group.by = 'condition', cols = c("gray40", "gray40")) + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5)  + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) & coord_flip()
+```
+
+```{r remove somatic cells from Qian object}
+plot <- DimPlot(Qian, label = T, group.by = 'seurat_clusters')
+cells.located <- CellSelector(plot = plot)
+Qian_germ <- Qian[,!colnames(Qian) %in% cells.located]
+
+plot <- DimPlot(Qian_germ, label = T, group.by = 'seurat_clusters')
+cells.located <- CellSelector(plot = plot)
+Qian_germ <- Qian_germ[,!colnames(Qian_germ) %in% cells.located]
+
+```
+
+```{r}
+VlnPlot(Qian_germ, features = c("nanos3", "zp3b", "rec8a", "bmp15", "zp2.2", "zp3b", "zp3.2"), stack = T, flip = T, group.by = 'age')
+VlnPlot(Haimbaugh, features = c("nanos3", "zp3b", "rec8a", "bmp15", "zp2.2", "zp3b", "zp3.2"), stack = T, flip = T, group.by = 'condition')
+```
+
+```{r subset Haimbaugh by condition}
+DefaultAssay(Haimbaugh) <- "RNA"
+untreated <- subset(Haimbaugh, condition == 'untreated')
+treated <- subset(Haimbaugh, condition == 'treated')
+DefaultAssay(treated) <- "RNA"
+```
+
+```{r get unique cells for Haimbaugh untreated}
+nanos3 <- as.data.frame(WhichCells(untreated, expression = nanos3 > 0))
+names(nanos3)[names(nanos3) == "WhichCells(untreated, expression = nanos3 > 0)"] <- "cells"
+
+bmp15 <- as.data.frame(WhichCells(untreated, expression = bmp15 > 0))
+names(bmp15)[names(bmp15) == "WhichCells(untreated, expression = bmp15 > 0)"] <- "cells"
+
+zp3b <- as.data.frame(WhichCells(untreated, expression = zp3b > 0))
+names(zp3b)[names(zp3b) == "WhichCells(untreated, expression = zp3b > 0)"] <- "cells"
+
+untreated_cells <- rbind(nanos3, bmp15, zp3b)
+
+unique_untreated_cells <- unique(untreated_cells$cells)
+length(unique_untreated_cells)
+```
+
+```{r get unique cells for Haimbaugh treated}
+nanos3 <- as.data.frame(WhichCells(treated, expression = nanos3 > 0))
+names(nanos3)[names(nanos3) == "WhichCells(treated, expression = nanos3 > 0)"] <- "cells"
+
+bmp15 <- as.data.frame(WhichCells(treated, expression = bmp15 > 0))
+names(bmp15)[names(bmp15) == "WhichCells(treated, expression = bmp15 > 0)"] <- "cells"
+
+zp3b <- as.data.frame(WhichCells(treated, expression = zp3b > 0))
+names(zp3b)[names(zp3b) == "WhichCells(treated, expression = zp3b > 0)"] <- "cells"
+
+treated_cells <- rbind(nanos3, bmp15, zp3b)
+
+unique_treated_cells <- unique(treated_cells$cells)
+length(unique_treated_cells)
+```
+```{r get unique cells for Qian germ treated}
+nanos3 <- as.data.frame(WhichCells(Qian_germ, expression = nanos3 > 0))
+names(nanos3)[names(nanos3) == "WhichCells(Qian_germ, expression = nanos3 > 0)"] <- "cells"
+
+gdf9 <- as.data.frame(WhichCells(Qian_germ, expression = gdf9 > 0))
+names(gdf9)[names(gdf9) == "WhichCells(Qian_germ, expression = gdf9 > 0)"] <- "cells"
+
+rec8a <- as.data.frame(WhichCells(Qian_germ, expression = rec8a > 0))
+names(rec8a)[names(rec8a) == "WhichCells(Qian_germ, expression = rec8a > 0)"] <- "cells"
+
+bmp15 <- as.data.frame(WhichCells(Qian_germ, expression = bmp15 > 0))
+names(bmp15)[names(bmp15) == "WhichCells(Qian_germ, expression = bmp15 > 0)"] <- "cells"
+
+zp2.2 <- as.data.frame(WhichCells(Qian_germ, expression = zp2.2 > 0))
+names(zp2.2)[names(zp2.2) == "WhichCells(Qian_germ, expression = zp2.2 > 0)"] <- "cells"
+
+zp3b <- as.data.frame(WhichCells(Qian_germ, expression = zp3b > 0))
+names(zp3b)[names(zp3b) == "WhichCells(Qian_germ, expression = zp3b > 0)"] <- "cells"
+
+zp3.2 <- as.data.frame(WhichCells(Qian_germ, expression = zp3.2 > 0))
+names(zp3.2)[names(zp3.2) == "WhichCells(Qian_germ, expression = zp3.2 > 0)"] <- "cells"
+
+Qian_cells <- rbind(nanos3, bmp15, zp3b)
+
+unique_Qian_cells <- unique(Qian_cells$cells)
+length(unique_Qian_cells)
 ```
