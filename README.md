@@ -21,7 +21,7 @@ Filtered gene expression matrices outputted from Cellranger for each sample can 
 ### Seurat objects 
 The following Seurat objects are available for download:
 
-Main Figures
+#### Main Figures
 5-22 mo. atlas (Figure 1C) [DOWNLOAD](https://drive.google.com/file/d/1XEFHbI0cxR0YiwYRFFJff_xWQ_QN0CFw/view?usp=sharing)
 
 27 mo. atlas (Figure 2C) [DOWNLOAD](https://drive.google.com/file/d/1JpmZJdrAF0ecNJcbT_0yd9fzSzy5ntaM/view?usp=sharing)
@@ -30,7 +30,7 @@ immune atlas (Figure 3A) [DOWNLOAD](https://drive.google.com/file/d/1Q4Oy4bG3qMz
 
 SPG atlas (Figure 3C) [DOWNLOAD](https://drive.google.com/file/d/1NB9Pi73mCTc0y6FKByB8X5uSn6tEx2GS/view?usp=sharing)
 
-Figure S1B
+#### Figure S1B
 5 mo. [DOWNLOAD](https://drive.google.com/file/d/1X1gbmF9gEHzdPXFDxKvBFZBO0lARQ35o/view?usp=sharing)
 
 12 mo. [DOWNLOAD](https://drive.google.com/file/d/194f2ahQB2dTG3PTuSAMA47HRYEPVOU5M/view?usp=sharing)
