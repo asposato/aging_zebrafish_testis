@@ -314,7 +314,8 @@ mo27_incomplete_germ <- AddMetaData(mo27_incomplete_germ, diffs, "pseudotime")
 saveRDS(mo27_incomplete_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_w_pseudotime.rds")
 ```
 
-```{r mo27 incomplete URD}
+```{r Figure S7B}
+# mo27 incomplete URD
 plotDim(mo27_incomplete_germ_URD, "pseudotime.scaled", point.size = 1.5, colors = c("#0000FF", "#002DF8", "#004EF9", "#0A74F9", "#0D8EFA", "#12B5FB", "#16DAFD", "#26F7EA", "#52FAB8", "#F7F53A")) + ggtitle(" ") + NoLegend() + NoAxes()
 ```
 
@@ -433,7 +434,8 @@ saveRDS(complete_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ
 saveRDS(complete_germ_URD, "/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_URD_pseudotime_scaled.rds")
 ```
 
-```{r plot differentiation score for first object}
+```{r Figure 4A}
+# plot differentiation score for third object
 complete_germ_URD <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_URD_pseudotime_scaled.rds") 
 plotDim(complete_germ_URD, "pseudotime.scaled", point.size=1.5) + ggtitle(" ") + NoAxes()
 ```
@@ -912,6 +914,7 @@ ggplot(data=yr1.8_df, aes(x=pseudotime_scores, y=cell_percents, color = variable
 rm(yr1.8_0.05,yr1.8_0.1,yr1.8_0.15,yr1.8_0.2,yr1.8_0.25,yr1.8_0.3,yr1.8_0.35,yr1.8_0.4,yr1.8_0.45,yr1.8_0.5,yr1.8_0.55,yr1.8_0.6,yr1.8_0.65,yr1.8_0.7,yr1.8_0.75,yr1.8_0.8,yr1.8_0.85,yr1.8_0.9,yr1.8_0.95,yr1.8_1.0)
 rm(yr1.8)
 ```
+
 ```{r sort 27 month cells into 20 bins across the pseudotime spectrum}
 # 27 mo. fish C
 mo27_C <- subset(germ, sub.sample == '27mo_C')
@@ -1235,6 +1238,7 @@ mo27_AB_df <- data.frame(pseudotime_scores, cell_percents, age)
 
 ggplot(data=mo27_AB_df, aes(x=pseudotime_scores, y=cell_percents, color = variable )) + geom_point(shape = 4, color = 'pink2') + geom_path(size = 0.5, color = 'pink2', group = 1, linetype = 'solid') + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5)) + ggtitle("incomplete 27 mo testis pseudotime graph")
 ```
+
 ```{r generate the composite data frame}
 # combine ages for one graph with 20 bins scaled
 fertile_pseudotime_df <- rbind(mo5_A_df, mo5_B_df, yr1_A_df, yr1_B_df, 
@@ -1327,9 +1331,10 @@ lines <- c('solid', 'solid', 'solid', 'solid', 'solid',
 ggplot(data=fertile_pseudotime_df, aes(x=pseudotime_scores, y=cell_counts, group = age, color = pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("testis germ cells by pseudotime") + scale_color_manual(values = c('red', 'purple', 'darkgreen', 'dodgerblue', 'sienna2', "pink2")) +labs(y= "# cells from each age", x = "differentiation")
 ```
 
-```{r Figure 4 panel C, fig.height=6, fig.width=9}
+```{r Figure S7E, fig.height=6, fig.width=9}
 ggplot(data=fertile_pseudotime_df, aes(x=pseudotime_scores, y=cell_percents, group = age, color = pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("fertile germ cells by pseudotime") + scale_color_manual(values = c('red', 'purple', 'darkgreen', 'dodgerblue', 'sienna2', 'pink2')) +labs(y= "cells from each age (%)", x = "differentiation") 
 ```
+
 ```{r adjust df for the composite averaged data frame}
 # combine ages for one graph with 20 bins scaled
 mo5_df$cell_counts <- "0"
@@ -1341,7 +1346,8 @@ mo27_CD_df$age <- "mo27_CD"
 mo27_AB_df$age <- "mo27_AB"
 ```
 
-```{r generate the composite data frame for averaged, fig.height=4, fig.width=6}
+```{r Figure 4B, fig.height=4, fig.width=6}
+# generate the composite data frame for averaged
 pseudotime_df <- rbind(mo5_df, mo12_df, yr1.6_df, yr1.8_df, mo27_CD_df, mo27_AB_df)
 colors <- c("red", "red","red", "red","red", "red","red", "red","red", "red",
             "red", "red","red", "red","red", "red","red", "red","red", "red",
@@ -1403,7 +1409,6 @@ lines <- c('solid', 'solid', 'solid', 'solid', 'solid',
 
 ggplot(data=pseudotime_df, aes(x=pseudotime_scores, y=cell_percents, group = age, color = pseudotime_df$age)) + geom_point(shape = shapes, color = colors, size = 2, aes(color = age)) + geom_path(linetype = lines, size = 0.5, color = colors, aes(color = age)) + theme(panel.background = element_blank(), axis.line = element_line(colour = "black")) + theme(plot.title = element_text(hjust = 0.5, size = 20)) + ggtitle("germ cells by differentiation") + scale_color_manual(values = c('red', 'purple', 'green', 'dodgerblue', 'sienna2', 'pink2')) +labs(y= "cells from each age (%)", x = "differentiation") 
 ```
-
 
 ```{r assign differentiation groups to germ object}
 meta <- germ@meta.data
@@ -1491,11 +1496,12 @@ germ_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_impaired_df, mo27_incom
 germ_df$age <- factor(germ_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo. incomplete"))
 ```
 
-```{r Figure 4 panel A}
+```{r Figure S7A}
 ggplot(germ_df, aes(fill=age, x=factor(cell.cats, level=c("spermatogonia", "spermatocytes", "round spermatids", "elongating spermatids", "spermatozoa")), y=percents)) + 
   geom_bar(position = 'dodge', stat = 'identity', color = 'black') + theme_classic() + 
   ylab("normalized percent") + xlab("cell type") + theme(plot.title = element_text(hjust = 0.5, size = 12)) + theme(axis.text.x = element_text(angle = 0, vjust = 0, hjust=.5, size = 5)) + scale_fill_manual(values=c('#F0F8FF', '#ADD8E6', '#87CEEB', '#4682B4', '#204a87', '#051732')) + ggtitle("relative abundance of germ cell types across fertility")
 ```
+
 ```{r load individual objects}
 mo5 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo5.rds")
 mo12 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo12.rds")
@@ -1504,7 +1510,6 @@ mo22 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo22.rds")
 mo27_complete <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27complete.rds")
 mo27_incomplete <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete.rds")
 ```
-
 
 ```{r subset objects for SPG clusters}
 mo5_subset <- subset(mo5, subset = cell.type == c("spermatogonia 1", "spermatogonia 2", "spermatogonia 3"))
@@ -1523,7 +1528,8 @@ mo27_complete_subset@meta.data$age.cat <- '27 mo. complete'
 mo27_incomplete_subset@meta.data$age.cat <- '27 mo. incomplete'
 ```
 
-```{r integrate SPG, fig.height=4, fig.width=4, message=FALSE, warning=FALSE}
+```{r Figure 4C, fig.height=4, fig.width=4, message=FALSE, warning=FALSE}
+# integrate SPG
 SPG.anchors <- FindIntegrationAnchors(object.list = list(mo5_subset, mo12_subset, mo20_subset, mo22_subset, mo27_complete_subset, mo27_incomplete_subset), dims = 1:10)
 SPG <- IntegrateData(anchorset = SPG.anchors, dims = 1:10)
 DefaultAssay(SPG) <- "integrated"
@@ -1535,11 +1541,13 @@ SPG <- FindNeighbors(SPG, reduction = 'pca', dims = 1:10)
 SPG <- FindClusters(SPG, resolution = 0.5)
 DimPlot(SPG, group.by = 'age.cat', cols = c('forestgreen', 'gray', 'darkmagenta'), pt.size = 1.5) + NoAxes() + ggtitle(" ") + NoLegend()
 ```
-```{r}
+
+```{r Figure S7C}
 table(SPG$age)
 SPG$age <- factor(SPG$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo."))
 DimPlot(SPG, split.by = 'age', pt.size = 1.5) + NoAxes() + ggtitle(" ") + NoLegend()
 ```
+
 ```{r get lists of fertile and infertile SPG}
 SPG_meta <- SPG@meta.data
 SPG_meta$cell.id <- row.names(SPG_meta)
@@ -1581,19 +1589,22 @@ SPG@meta.data$age <- factor(x = SPG@meta.data$age, levels = my_levels)
 features_for_dotplot <- c(ovary, "tssk6", "nanos2", pluripotency, "gsdf", "star", infertile10, "spo11", "tagln", fertile10, "acta2", "sycp2", known)
 ```
 
-```{r Figure 4 panel E, fig.height=6.9, fig.width=8.8, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r Figure 4D, fig.height=6.9, fig.width=8.8, message=FALSE, warning=FALSE, paged.print=FALSE}
 DotPlot(SPG, features = features_for_dotplot, scale = T, group.by = 'age') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + 
   theme(axis.text.x = element_text(angle =45,hjust = 1, size = 0, family = 'Arial')) + 
   theme(axis.text.y = element_text(angle =0,hjust = 1, size = 14, family = 'Arial')) + 
   theme(legend.title = element_text(size = 10, family = 'Arial')) + 
   theme(axis.title = element_text(size = 0)) & coord_flip()
 ```
-```{r violin plot zp3, fig.height=4.1, fig.width=3.6}
+
+```{r Figure S7D, fig.height=4.1, fig.width=3.6}
+#violin plot zp3
 DefaultAssay(SPG) <- "RNA"
 zps <- c("zp3b", "zp3.2", "zp3a.1", "zp3a.2", "zp2.2")
 SPG$age <- factor(SPG$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo."))
 VlnPlot(SPG, zps, group.by = 'age', stack = T, flip = T) + NoLegend()
 ```
+
 ```{r subset SPG by age}
 DefaultAssay(SPG) <- "RNA"
 mo5 <- subset(SPG, age == '5 mo.')
@@ -1743,84 +1754,69 @@ length(unique_mo27_incomplete_cells)
 13/253*100 # 5.1
 8/777*100 # 1.0
 3756/3756*100 # 100
+
+# these percents were added to the top of Figure S7D
 ```
 
-# ovary-like and ube2 supplemental figures (Figure S8)
 
+# ovary-like and ube2 supplemental figures (Figure S8)
 ```{r define ube2 genes}
 ube2 <- c("ube2b", "ube2s", "ube2j2", "ube2r2", "ube2wb", "ube2z")
 ```
 
-```{r violin plots in Sposato et al data I, fig.height=7, fig.width=5}
+```{r Figure S8D part I, fig.height=7, fig.width=5}
+# violin plots in Sposato et al data I
 DefaultAssay(complete_germ) <- "RNA"
 complete_germ@meta.data$age <- factor(x = complete_germ@meta.data$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete"))
 VlnPlot(complete_germ, features = ube2, stack = T, flip = T, group.by = 'age') + NoLegend()
 ```
 
-
-```{r violin plots in Sposato et al data II}
+```{r Figure S8D part II}
+# violin plots in Sposato et al data II
 DefaultAssay(incomplete_germ) <- "RNA"
 VlnPlot(incomplete_germ, features = ube2, stack = T, flip = T, group.by = 'age')
 ```
 
-
-```{r violin plots in Sposato et al data}
-```
-
-
-
-```{r}
+```{r load Haimbaugh data}
 Haimbaugh <- readRDS("/Volumes/LaCie/seurat_objects/Haimbaugh/Haimbaugh_all_samples.rds")
 DimPlot(Haimbaugh)
 ```
 
-```{r panel E part I}
+```{r Figure S8E part I}
+# panel E part I
 Haimbaugh@meta.data$condition <- factor(x = Haimbaugh@meta.data$condition, levels = c("untreated", "treated"))
 VlnPlot(Haimbaugh, features = c("ube2b", "ube2s", "ube2j2", "ube2r2", "ube2z"), stack = T, flip = T, group.by = 'condition')
 ```
 
-```{r}
-ube2 <- c("ube2b", "ube2s", "ube2j2", "ube2r2", "ube2wb", "ube2z")
-```
-
-```{r}
+```{r load germ objects}
 complete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/complete_germ_w_pseudotime.rds")
 incomplete_germ <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27incomplete_germ_w_pseudotime.rds")
 ```
 
-
-```{r}
-DefaultAssay(complete_germ) <- "RNA"
-complete_germ@meta.data$age <- factor(x = complete_germ@meta.data$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete"))
-VlnPlot(complete_germ, features = ube2, stack = T, flip = T, group.by = 'age')
-DefaultAssay(incomplete_germ) <- "RNA"
-VlnPlot(incomplete_germ, features = ube2, stack = T, flip = T, group.by = 'age')
-```
-
-```{r}
+```{r load Qian object}
 Qian <- readRDS("/Volumes/LaCie/seurat_objects/Qian/Qian.rds")
 ```
 
-```{r panel E part II}
+```{r Figure S8E part II}
 DefaultAssay(Qian) <- "RNA"
 VlnPlot(Qian, features = ube2, stack = T, flip = T, group.by = 'age')
 ```
 
-```{r}
+```{r subset SPG from Haimbaugh data}
 plot <- DimPlot(Haimbaugh, label = T, group.by = 'seurat_clusters')
 cells.located <- CellSelector(plot = plot)
 Haimbaugh_SPG <- Haimbaugh[,colnames(Haimbaugh) %in% cells.located]
 ```
 
-```{r}
+```{r plot Haimbaugh SPG}
 DimPlot(Haimbaugh_SPG)
 ```
 
-```{r}
+```{r scale data for Haimbaugh SPG}
 ScaleData(Haimbaugh_SPG, assay = "RNA")
 ```
 
-```{r}
+```{r Figure S8C}
 markers <- c("fosab", "il2", "piwil1", "dazl", "ccnb3", "hist1h4l", "pcna", "sumo3b", "ddx4")
 Haimbaugh_SPG@meta.data$condition <- factor(x = Haimbaugh_SPG@meta.data$condition, levels = c("untreated", "treated"))
 
@@ -1838,16 +1834,16 @@ Qian_germ <- Qian_germ[,!colnames(Qian_germ) %in% cells.located]
 
 ```
 
-```{r}
-VlnPlot(Qian_germ, features = c("nanos3", "zp3b", "rec8a", "bmp15", "zp2.2", "zp3b", "zp3.2"), stack = T, flip = T, group.by = 'age')
-VlnPlot(Haimbaugh, features = c("nanos3", "zp3b", "rec8a", "bmp15", "zp2.2", "zp3b", "zp3.2"), stack = T, flip = T, group.by = 'condition')
-```
-
 ```{r subset Haimbaugh by condition}
 DefaultAssay(Haimbaugh) <- "RNA"
 untreated <- subset(Haimbaugh, condition == 'untreated')
 treated <- subset(Haimbaugh, condition == 'treated')
 DefaultAssay(treated) <- "RNA"
+```
+
+```{r Figure S8A-B}
+VlnPlot(Qian_germ, features = c("nanos3", "zp3b", "rec8a", "bmp15", "zp2.2", "zp3b", "zp3.2"), stack = T, flip = T, group.by = 'age')
+VlnPlot(Haimbaugh, features = c("nanos3", "zp3b", "rec8a", "bmp15", "zp2.2", "zp3b", "zp3.2"), stack = T, flip = T, group.by = 'condition')
 ```
 
 ```{r get unique cells for Haimbaugh untreated}
@@ -1881,7 +1877,8 @@ treated_cells <- rbind(nanos3, bmp15, zp3b)
 unique_treated_cells <- unique(treated_cells$cells)
 length(unique_treated_cells)
 ```
-```{r get unique cells for Qian germ treated}
+
+```{r get unique cells for Qian germ }
 nanos3 <- as.data.frame(WhichCells(Qian_germ, expression = nanos3 > 0))
 names(nanos3)[names(nanos3) == "WhichCells(Qian_germ, expression = nanos3 > 0)"] <- "cells"
 
@@ -1908,3 +1905,4 @@ Qian_cells <- rbind(nanos3, bmp15, zp3b)
 unique_Qian_cells <- unique(Qian_cells$cells)
 length(unique_Qian_cells)
 ```
+
