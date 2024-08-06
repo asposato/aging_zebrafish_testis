@@ -582,7 +582,6 @@ saveRDS(mo27_soma, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_soma.rds")
 saveRDS(mo27_germ, "/Volumes/LaCie/seurat_objects/Sposato_etal/mo27_germ.rds")
 ```
 
-
 # Figure Panels
 ```{r Figure 2C, fig.height=3, fig.width=5.7}
 combined$cell.type.cat <- factor(combined$cell.type.cat, levels = c("germ cells", "Sertoli, Leydig, SMC-like", "epithelial cells", "blood", "macrophages", "lymphocytes", "neutrophils", "leukocytes", "unknown"))
@@ -603,19 +602,11 @@ FeaturePlot(mo27_germ, "ccnb3", pt.size = 1, order = F) + NoAxes() + ggtitle(" "
 FeaturePlot(mo27_germ, "tssk6", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
 ```
 
-```{r Figure 2H}
-DefaultAssay(mo27_soma) <- "RNA"
-FeaturePlot(mo27_soma, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle("gsdf") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(mo27_soma, "star", pt.size = 1, order = F) + NoAxes() + ggtitle("star") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(mo27_soma, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle("tagln") + scale_colour_viridis(option = "rocket", direction = -1)
-FeaturePlot(mo27_soma, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle("hbba1") + scale_colour_viridis(option = "rocket", direction = -1)
-```
-
-```{r Figure 2G, fig.height=3.3, fig.width=4}
+```{r Figure 2F, fig.height=3.3, fig.width=4}
 DimPlot(mo27_soma, group.by = 'sperm.status', cols = c("forestgreen", "lightgrey"), pt.size = 1.5, shuffle = T) + NoLegend() + NoAxes() + ggtitle(" ")
 ```
 
-```{r Figure 2H, fig.height=4.25, fig.width=5.5}
+```{r Figure 2G, fig.height=4.25, fig.width=5.5}
 DefaultAssay(mo27_soma) <- "RNA"
 FeaturePlot(mo27_soma, "gsdf", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
 FeaturePlot(mo27_soma, "star", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
@@ -623,17 +614,17 @@ FeaturePlot(mo27_soma, "tagln", pt.size = 1, order = F) + NoAxes() + ggtitle(" "
 FeaturePlot(mo27_soma, "hbba1", pt.size = 1, order = F) + NoAxes() + ggtitle(" ") + scale_colour_viridis(option = "rocket", direction = -1) + theme(legend.text=element_text(size=15))
 ```
 
-```{r Figure S5A, fig.height=3.3, fig.width=4}
+```{r Figure S4A, fig.height=3.3, fig.width=4}
 DimPlot(mo27testis, group.by = 'cell.type', label = T, repel = T) + NoLegend() + NoAxes()
 DimPlot(mo27testis, group.by = 'cell.type', label = F, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
 ```
 
-```{r Figure S5B, fig.height=3.3, fig.width=4}
+```{r Figure S4B, fig.height=3.3, fig.width=4}
 DimPlot(mo27testis_i, label = T, group.by = 'cell.type', repel = T) + NoLegend() + NoAxes()
 DimPlot(mo27testis_i, group.by = 'cell.type', label = F, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
 ```
 
-```{r Figure S5C}
+```{r Figure S4C}
 DefaultAssay(mo27testis) <- "RNA"
 mo27testis$cell.type.cat <- factor(x = mo27testis$cell.type.cat, levels = c("pre-meiotic germ cells", "meiotic germ cells", "post-meiotic germ cells", "somatic cells", "immune cells"))
 VlnPlot(mo27testis, group.by = 'cell.type.cat', features = c("ddx4", "sycp3", "ccnb3", "tssk6", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
@@ -641,7 +632,7 @@ mo27testis$cell.type <- factor(x = mo27testis$cell.type, levels = c("spermatogon
 VlnPlot(mo27testis, group.by = 'cell.type', features = c("ddx4", "sycp3", "ccnb3", "tssk6", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
 ```
 
-```{r Figure S5D}
+```{r Figure S4D}
 DefaultAssay(mo27testis_i) <- "RNA"
 mo27testis_i$cell.type.cat <- factor(x = mo27testis_i$cell.type.cat, levels = c("pre-meiotic germ cells", "meiotic germ cells", "Sertoli & Leydig", "blood", "SMC-like", "macrophages", "lymphocytes", "leukocytes", "unknown immune"))
 VlnPlot(mo27testis_i, group.by = 'cell.type.cat', features = c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
@@ -649,20 +640,22 @@ mo27testis_i$cell.type <- factor(x = mo27testis_i$cell.type, levels = c("spermat
 VlnPlot(mo27testis_i, group.by = 'cell.type', features = c("ddx4", "sycp3", "ccnb3", "gsdf", "star", "tagln", "hbba1"), pt.size = 0, stack = T, flip=T) + NoLegend() + theme(axis.text.x = element_text(angle = 60))
 ```
 
-```{r Figure S5E, fig.height=3.3, fig.width=4}
+```{r Figure S4E, fig.height=3.3, fig.width=4}
 mo27_germ$cell_type <- factor(x = mo27_germ$cell_type, levels = c("spermatogonia (incomplete)", "spermatogonia (complete)", "spermatocytes", "spermatids", "spermatozoa"))
 DimPlot(mo27_germ, group.by = 'cell_type', label = T, repel = T) + NoLegend() + NoAxes()
 DimPlot(mo27_germ, group.by = 'cell_type', pt.size = 1.5, label = F, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
 ```
 
-```{r Figure S5F}
+```{r Figure S4F}
 DimPlot(mo27_soma, group.by = 'cell_type', label = T) + NoLegend() + NoAxes()
 DimPlot(mo27_soma, group.by = 'cell_type', label = F, pt.size = 1.5) + NoLegend() + NoAxes() + ggtitle(" ")
 ```
-```{r Figure S5G, fig.height=3.3, fig.width=4}
+
+```{r Figure S4G, fig.height=3.3, fig.width=4}
 DimPlot(combined, group.by = 'sperm.status', cols = c("forestgreen", "lightgrey"), pt.size = 1.5, shuffle = T) + NoLegend() + NoAxes() + ggtitle(" ")
 ```
-```{r Figure S5H, fig.height=3, fig.width=3}
+
+```{r Figure S4H, fig.height=3, fig.width=3}
 VlnPlot(combined, "percent.mt", group.by = 'sperm.status', pt.size = 0, cols = c("forestgreen", "lightgrey")) + NoLegend() + theme(axis.text.x = element_text(angle = 20)) + ggtitle(" ")
 VlnPlot(combined, "nFeature_RNA", group.by = 'sperm.status', pt.size = 0, cols = c("forestgreen", "lightgrey")) + NoLegend() + theme(axis.text.x = element_text(angle = 20)) + ggtitle(" ")
 VlnPlot(combined, "nCount_RNA", group.by = 'sperm.status', pt.size = 0, cols = c("forestgreen", "lightgrey")) + NoLegend() + theme(axis.text.x = element_text(angle = 20)) + ggtitle(" ")
