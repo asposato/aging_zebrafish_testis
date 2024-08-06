@@ -17,10 +17,11 @@ testis_5_12_20_22 <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/testis_
 combined <- readRDS("/Volumes/LaCie/seurat_objects/Sposato_etal/mo27testis.rds")
 ```
 
-```{r}
+```{r plot objects by cell type}
 DimPlot(testis_5_12_20_22, group.by = 'cell_type', label = T) + NoLegend() + NoAxes()
 DimPlot(combined, group.by = 'cell.type.cat', label = T) + NoLegend() + NoAxes()
 ```
+
 ```{r subset immune cells from both objects}
 young_immune <- subset(x = testis_5_12_20_22, subset = cell_type == 'immune')
 immune_cells <- c("macrophages", "lymphocytes", "neutrophils", "leukocytes", "unknown")
@@ -66,7 +67,7 @@ cell.types <- as.vector(meta$cell.type)
 immune <- AddMetaData(immune, cell.types, 'cell.type')
 ```
 
-```{r}
+```{r set levels for object}
 my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
 immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
 
@@ -74,61 +75,6 @@ my_levels <- c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo.
 immune@meta.data$age <- factor(immune@meta.data$age, levels = my_levels)
 ```
 
-```{r}
-DimPlot(immune, group.by = 'cell.type', label = T, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
-                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
-                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
-                                                            "#C8A2C8", "#98FB98", 
-                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel =F) + NoLegend() + NoAxes() + ggtitle(" ")
-
-DimPlot(immune, group.by = 'cell.type', label = F, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
-                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
-                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
-                                                            "#C8A2C8", "#98FB98", 
-                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
-```
-```{r}
-DimPlot(immune, split.by = 'age', group.by = 'cell.type', label = F, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
-                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
-                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
-                                                            "#C8A2C8", "#98FB98", 
-                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
-```
-
-
-# Figure Panels
-```{r Figure 3A}
-DimPlot(immune, group.by = 'cell.type', label = T, repel = T) + NoLegend() + NoAxes()
-```
-```{r Figure 3 panel B, message=FALSE, warning=FALSE}
-DefaultAssay(immune) <- "RNA"
-marker_list <- c("coro1a", "ptprc","lck", "gata3", "runx3", "zap70", 
-                  "foxp3a", "cd4-1", 
-                  "nkl.2", "pax5", 
-                  "mpeg1.1", "csf1ra", "lgmn",
-                  "mpx", "lyz",
-                  "defbl1", "apodb")
-my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
-
-my_levels_r <- c("unknown", "NK", "neutrophils", "B cells", "leukocytes", "macrophages 4", "macrophages 3", "macrophages 2", "macrophages 1", "T cells & macrophages", "Treg", "T cells 6", "T cells 5", "T cells 4", "T cells 3", "T cells 2", "T cells 1")
-immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels_r)
-
-DotPlot(immune, features = marker_list, scale = T, group.by = 'cell.type') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + theme(axis.text.x = element_text(angle =45,hjust = 1, size = 12, family = 'Arial')) + theme(axis.text.y = element_text(angle =0,hjust = 1, size = 12, family = 'Arial')) + theme(legend.title = element_text(size = 12, family = 'Arial')) + theme(axis.title = element_text(size = 0))
-
-```
-```{r fig.height=5, fig.width=8}
-my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
-immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
-
-VlnPlot(immune, features = marker_list, group.by = 'cell.type', stack = T, flip = T) + NoLegend()
-```
-
-
-```{r}
-my_levels <- c("27 mo.", "27 mo. complete", "5 mo.", "12 mo.", "20 mo.", "22 mo.")
-immune@meta.data$age <- factor(immune@meta.data$age, levels = my_levels)
-DimPlot(immune, group.by = 'age', label = F, cols = c("grey75", "forestgreen","darkmagenta", "darkmagenta","darkmagenta", "darkmagenta"), pt.size = 1.5, order = T) + NoLegend() + NoAxes() + ggtitle(" ")
-```
 ```{r collect counts for somatic cell bar graph in 27 mo.}
 meta_combined <- combined@meta.data
 mo27_complete_meta <- subset(meta_combined, meta_combined$age == '27 mo. complete')
@@ -146,13 +92,10 @@ table(testis_Sertoli_Leydig$age)
 ```{r subset blood and SMC from 5-22 mo.}
 testis_blood_SMC <- subset(x = testis_5_12_20_22, subset = cell_type == 'blood & SMC-like')
 ```
-
 ```{r plot blood and SMC from 5-22 mo.}
 FeaturePlot(testis_blood_SMC, "rna_hbba1", order = T)
 FeaturePlot(testis_blood_SMC, "rna_tagln", order = T)
 ```
-
-
 ```{r count blood and SMC from 5-22 mo.}
 plot = DimPlot(testis_blood_SMC)
 cells <- CellSelector(plot = plot)
@@ -161,12 +104,10 @@ testis_blood <- testis_blood_SMC[,!colnames(testis_blood_SMC) %in% cells]
 table(testis_SMC$age)
 table(testis_blood$age)
 ```
-
 ```{r subset Sertoli and Leydig cells from 5-22 mo.}
 testis_immune <- subset(x = testis_5_12_20_22, subset = cell_type == 'immune')
 table(testis_immune$age)
 ```
-
 ```{r plot lymphocytes and macrophages from 5-22 mo.}
 FeaturePlot(testis_immune, "rna_lck", order = T)
 FeaturePlot(testis_immune, "rna_zap70", order = T)
@@ -178,7 +119,6 @@ cells <- CellSelector(plot = plot)
 testis_macrophages <- testis_immune[,colnames(testis_immune) %in% cells]
 table(testis_macrophages$age)
 ```
-
 ```{r build dataframe for bargraph from cell numbers}
 # the cell percent is determined by dividing the cell count by the total number of cells in the individual age's object
 cell.cats <- c("SLSMC", "macrophages", "lymphocytes", "other immune", "blood")
@@ -220,7 +160,61 @@ soma_df <- rbind(mo5_df, mo12_df, mo20_df, mo22_df, mo27_c_df, mo27_i_df)
 soma_df$age <- factor(soma_df$age, levels = c("5 mo.", "12 mo.", "20 mo.", "22 mo.", "27 mo. complete", "27 mo. incomplete"))
 ```
 
-```{r plot relative abundance}
+# Figure Panels
+```{r Figure 3A}
+DimPlot(immune, group.by = 'cell.type', label = T, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
+                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
+                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
+                                                            "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel =F) + NoLegend() + NoAxes() + ggtitle(" ")
+
+DimPlot(immune, group.by = 'cell.type', label = F, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
+                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
+                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
+                                                            "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure S5A}
+DimPlot(immune, split.by = 'age', group.by = 'cell.type', label = F, cols = c("#B0E0E6", "#4169E1", "#40E0D0", 
+                                                            "#1E90FF", "#00008B","#87CEFA", "#4682B4", "#5F9EA0",
+                                                            "#CD5C5C", "#FFC0CB", "#8B0000", "#DC143C", 
+                                                            "#C8A2C8", "#98FB98", 
+                                                            "#800080", "#2E8B57", "#D0BA05"), pt.size = 1.5, repel = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure 3B}
+DefaultAssay(immune) <- "RNA"
+marker_list <- c("coro1a", "ptprc","lck", "gata3", "runx3", "zap70", 
+                  "foxp3a", "cd4-1", 
+                  "nkl.2", "pax5", 
+                  "mpeg1.1", "csf1ra", "lgmn",
+                  "mpx", "lyz",
+                  "defbl1", "apodb")
+my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
+
+my_levels_r <- c("unknown", "NK", "neutrophils", "B cells", "leukocytes", "macrophages 4", "macrophages 3", "macrophages 2", "macrophages 1", "T cells & macrophages", "Treg", "T cells 6", "T cells 5", "T cells 4", "T cells 3", "T cells 2", "T cells 1")
+immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels_r)
+
+DotPlot(immune, features = marker_list, scale = T, group.by = 'cell.type') + geom_point(aes(size=pct.exp), shape = 21, colour="black", stroke=0.5) + scale_colour_viridis(option="rocket", direction = -1) + guides(size=guide_legend(override.aes=list(shape=21, colour="black", fill="white"))) + theme(axis.text.x = element_text(angle =45,hjust = 1, size = 12, family = 'Arial')) + theme(axis.text.y = element_text(angle =0,hjust = 1, size = 12, family = 'Arial')) + theme(legend.title = element_text(size = 12, family = 'Arial')) + theme(axis.title = element_text(size = 0))
+
+```
+
+```{r Figure S5B, fig.height=5, fig.width=8}
+my_levels <- c("T cells 1", "T cells 2", "T cells 3", "T cells 4", "T cells 5", "T cells 6", "Treg", "T cells & macrophages", "macrophages 1", "macrophages 2", "macrophages 3", "macrophages 4", "leukocytes", "B cells", "neutrophils", "NK", "unknown")
+immune@meta.data$cell.type <- factor(immune@meta.data$cell.type, levels = my_levels)
+
+VlnPlot(immune, features = marker_list, group.by = 'cell.type', stack = T, flip = T) + NoLegend()
+```
+
+```{r Figure 3C}
+my_levels <- c("27 mo.", "27 mo. complete", "5 mo.", "12 mo.", "20 mo.", "22 mo.")
+immune@meta.data$age <- factor(immune@meta.data$age, levels = my_levels)
+DimPlot(immune, group.by = 'age', label = F, cols = c("grey75", "forestgreen","darkmagenta", "darkmagenta","darkmagenta", "darkmagenta"), pt.size = 1.5, order = T) + NoLegend() + NoAxes() + ggtitle(" ")
+```
+
+```{r Figure 3D}
+# plot relative abundance
 ggplot(soma_df, aes(fill=age, x=factor(cell.cats, level=c("SLSMC", "macrophages", "lymphocytes", "other immune", "blood")), y=percents)) + 
   geom_bar(position = 'dodge2', stat = 'identity', color = 'black') + 
   theme_classic() + 
