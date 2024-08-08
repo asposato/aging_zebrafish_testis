@@ -8,7 +8,7 @@ Vertebrate spermatogonial stem cells maintain sperm production over the lifetime
 You can easily explore the single-cell data using our [web-based application](https://sposato.shinyapps.io/aging_zebrafish_testis/).
 
 # Code
-R markdown code used to process data and generate all figures for the manuscript can be accessed in the Figure_code folder. Code for supplemental figures are grouped in with the relevant main figure. 
+R markdown files used to process data and generate all figures for the manuscript can be accessed in the Figure_code folder. Code for supplemental figures are grouped in with the relevant main figure. 
 
 # Data
 
