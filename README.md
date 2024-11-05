@@ -13,7 +13,7 @@ R markdown files used to process data and generate all figures for the manuscrip
 # Data
 
 ### Raw Data 
-Raw sequencing data for each sample will be available on GEO. 
+Raw sequencing data for each sample are available on GEO, Accession number: GSE275361.
 
 ### Gene Expression Matrices 
 Filtered gene expression matrices outputted from Cellranger for each sample can be downloaded [HERE](https://drive.google.com/drive/folders/1s_kVKr1LUiEaN6l0ca8W5yGbNQ_ztZnr?usp=sharing)
